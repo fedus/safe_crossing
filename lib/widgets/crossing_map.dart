@@ -35,6 +35,7 @@ class _CrossingMapState extends State<CrossingMap> {
     return FlutterMap(
       mapController: mapController,
       options: MapOptions(
+        interactiveFlags: InteractiveFlag.none,
         center: widget.crossingPosition,
         zoom: 20.0,
         onTap: _handleTap,

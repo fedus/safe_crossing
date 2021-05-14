@@ -31,7 +31,7 @@ dependencies:
 
   flutter_map: any
   latlong: ^0.6.1
-  swipe_cards: ^0.0.4
+  swipable_stack: ^0.5.0
 
 dev_dependencies:
   flutter_test:

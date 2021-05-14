@@ -3,7 +3,7 @@ import 'package:latlong/latlong.dart';
 import 'package:safe_crossing/model/pedestrian_crossing.dart';
 import 'package:safe_crossing/widgets/crossing_map.dart';
 
-import 'package:swipe_cards/swipe_cards.dart';
+import 'package:swipable_stack/swipable_stack.dart';
 import 'package:flutter_map/flutter_map.dart';
 
 class CrossingsSwiper extends StatefulWidget {
@@ -16,8 +16,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
 
-  List<SwipeItem> _swipeItems = [];
-  MatchEngine _matchEngine;
+  final swipeController = SwipableStackController();
 
   List<LatLng> _positions = [
     LatLng(49.5726531, 6.0971228),
@@ -34,36 +33,6 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   }
 
   @override
-  void initState() {
-    for (int i = 0; i < _positions.length; i++) {
-      _swipeItems.add(SwipeItem(
-          content: PedestrianCrossing(id: i, position: _positions[i]),
-          likeAction: () {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text("Liked $i"),
-              duration: Duration(milliseconds: 500),
-            ));
-          },
-          nopeAction: () {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text("Nope $i"),
-              duration: Duration(milliseconds: 500),
-            ));
-          },
-          superlikeAction: () {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text("Superliked $i"),
-              duration: Duration(milliseconds: 500),
-            ));
-          }));
-    }
-
-    _matchEngine = MatchEngine(swipeItems: _swipeItems);
-    super.initState();
-  }
-
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -73,20 +42,15 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
           child: Column(children: [
             Container(
               height: 550,
-              child: SwipeCards(
-                matchEngine: _matchEngine,
-                itemBuilder: (BuildContext context, int index) {
+              child: SwipableStack(
+                controller: swipeController,
+                builder: (context, index, constraints) {
+
                   print(index);
                   return Container(
                     alignment: Alignment.center,
                     child: CrossingMap(crossingPosition: _positions[index],),
                   );
-                },
-                onStackFinished: () {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text("Stack Finished"),
-                    duration: Duration(milliseconds: 500),
-                  ));
                 },
               ),
             ),
@@ -95,7 +59,9 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
               children: [
                 ElevatedButton(
                     onPressed: () {
-                      _matchEngine.currentItem.nope();
+                      swipeController.next(
+                        swipeDirection: SwipeDirection.left,
+                      );
                     },
                     child: Text("All clear")),
 /*                ElevatedButton(
@@ -105,7 +71,9 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                     child: Text("Superlike")),*/
                 ElevatedButton(
                     onPressed: () {
-                      _matchEngine.currentItem.like();
+                      swipeController.next(
+                        swipeDirection: SwipeDirection.right,
+                      );
                     },
                     child: Text("Parking too close"),
                 style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.red)))
