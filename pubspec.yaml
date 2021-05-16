@@ -32,6 +32,7 @@ dependencies:
   flutter_map: any
   latlong: ^0.6.1
   swipable_stack: ^0.5.0
+  firebase_core: 0.7.0
 
 dev_dependencies:
   flutter_test:

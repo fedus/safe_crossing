@@ -35,7 +35,7 @@ class _CrossingMapState extends State<CrossingMap> {
     return FlutterMap(
       mapController: mapController,
       options: MapOptions(
-        interactiveFlags: InteractiveFlag.none,
+        //interactiveFlags: InteractiveFlag.none,
         center: widget.crossingPosition,
         zoom: 20.0,
         onTap: _handleTap,
@@ -45,6 +45,19 @@ class _CrossingMapState extends State<CrossingMap> {
             urlTemplate: "https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=4tU816YhKHyTCL9UrWcy",
             maxNativeZoom: 20,
             maxZoom: 22
+        ),
+        MarkerLayerOptions(
+          markers: [
+            Marker(
+              width: 50.0,
+              height: 50.0,
+              point: widget.crossingPosition,
+              anchorPos: AnchorPos.align(AnchorAlign.center),
+              builder: (ctx) => Container(
+                child: Icon(Icons.add, size: 50),
+              ),
+            ),
+          ],
         ),
         CircleLayerOptions(circles: [
           CircleMarker(
