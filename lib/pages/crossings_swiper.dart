@@ -1,8 +1,5 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
-import 'package:safe_crossing/demo/crossing_positions.dart';
 import 'package:safe_crossing/widgets/crossing_map.dart';
 import 'package:safe_crossing/model/pedestrian_crossing.dart';
 
