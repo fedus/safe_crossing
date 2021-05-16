@@ -1,15 +1,17 @@
 import 'package:latlong/latlong.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PedestrianCrossing {
-  final int id;
+  final int nodeId;
   final LatLng position;
 
-  PedestrianCrossing({ this.id, this.position });
+  PedestrianCrossing({ this.nodeId, this.position });
 
   factory PedestrianCrossing.fromJson(Map<String, dynamic> json) {
+    GeoPoint _position = json['position'] as GeoPoint;
     return PedestrianCrossing(
-      id: json['id'] as int,
-      position: LatLng(json['lat'] as double, json['lon'] as double),
+      nodeId: json['id'] as int,
+      position: LatLng(_position.latitude, _position.longitude),
     );
   }
 }

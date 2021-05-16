@@ -57,6 +57,15 @@ class _CrossingMapState extends State<CrossingMap> {
                 child: Icon(Icons.add, size: 50),
               ),
             ),
+            Marker(
+              width: 10.0,
+              height: 10.0,
+              point: circlePosition,
+              anchorPos: AnchorPos.align(AnchorAlign.center),
+              builder: (ctx) => Container(
+                child: Icon(Icons.circle, size: 10, color: Colors.blueAccent,),
+              ),
+            ),
           ],
         ),
         CircleLayerOptions(circles: [
@@ -67,7 +76,7 @@ class _CrossingMapState extends State<CrossingMap> {
               borderStrokeWidth: 2,
               useRadiusInMeter: true,
               radius: 5 // 2000 meters | 2 km
-          )
+          ),
         ]),
       ],
     );

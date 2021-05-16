@@ -1,10 +1,14 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
 import 'package:safe_crossing/demo/crossing_positions.dart';
 import 'package:safe_crossing/widgets/crossing_map.dart';
+import 'package:safe_crossing/model/pedestrian_crossing.dart';
 
 import 'package:swipable_stack/swipable_stack.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CrossingsSwiper extends StatefulWidget {
   @override
@@ -15,11 +19,30 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
 
+  List<PedestrianCrossing> crossings = [];
+
+  final crossingsRef = FirebaseFirestore.instance
+      .collection('crossings')
+      .withConverter<PedestrianCrossing>(
+    fromFirestore: (snapshots, _) => PedestrianCrossing.fromJson(snapshots.data()),
+  );
+
+  int queryAmount = 10;
+  List<int> dataBounds;
+
   final swipeController = SwipableStackController();
 
-  void _handleTap(LatLng latLng) {
+  @override
+  void initState() {
+    super.initState();
+    _updateMoviesQuery();
+  }
+
+  void _updateMoviesQuery() {
     setState(() {
-      circlePosition = latLng;
+      crossingsRef.limit(10).get().then((QuerySnapshot querySnapshot) {
+        crossings.addAll(querySnapshot.docs.map((doc) => doc.data()));
+      });
     });
   }
 
@@ -83,17 +106,19 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
         Container(
           child: SwipableStack(
             controller: swipeController,
+            onSwipeCompleted: (index, direction) {
+              print("${crossings.length} elements in list");
+              if (crossings.length - 2 <= index) {
+                print("Loading more ...");
+                _updateMoviesQuery();
+              }
+            },
             builder: (context, index, constraints) {
-              LatLng currentCrossing = LatLng(
-                  pedestrianCrossingCoordinates[index][1],
-                  pedestrianCrossingCoordinates[index][0]
-              );
-
-              return index < pedestrianCrossingCoordinates.length
+              return index < crossings.length
               ? Container(
                 alignment: Alignment.center,
                 child: CrossingMap(
-                  crossingPosition: currentCrossing,
+                  crossingPosition: crossings[index].position,
                 ),
               )
               : Center(child: Text("Hooray! You're at the end."));
