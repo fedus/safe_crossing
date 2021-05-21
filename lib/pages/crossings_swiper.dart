@@ -9,6 +9,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+enum Vote {
+  CANT_SAY,
+  OK,
+  PARKING_CLOSE,
+}
+
 class CrossingsSwiper extends StatefulWidget {
   @override
   _CrossingsSwiperState createState() => _CrossingsSwiperState();
@@ -69,6 +75,12 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
       crossings.addAll(_crossingsSnapshot.docs.map((doc) => doc.data()));
       _lastCrossingSnapshot = _crossingsSnapshot.docs.last;
     });
+  }
+
+  void _vote(String crossingNodeId, Vote vote ) async {
+    print('Voting for $crossingNodeId with ${vote.index}');
+    crossingsRef.doc(crossingNodeId.split("/")[1]).collection('votes').doc(userUuid).set({ "vote": vote.index }).then((value) => print("User Added"))
+        .catchError((error) => print("Failed to add user: $error"));
   }
 
   Future<void> _showHelpDialog() async {
@@ -148,6 +160,21 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                 child: SwipableStack(
                   controller: swipeController,
                   onSwipeCompleted: (index, direction) {
+                    Vote vote;
+
+                    switch (direction) {
+                      case SwipeDirection.left:
+                        vote = Vote.OK;
+                        break;
+                      case SwipeDirection.right:
+                        vote = Vote.PARKING_CLOSE;
+                        break;
+                      default:
+                        vote = Vote.CANT_SAY;
+                    }
+
+                    _vote(crossings[index].nodeId, vote);
+
                     print("Swiped ${crossings[index].nodeId}, ${crossings
                         .length} elements in list");
                     if (crossings.length - 2 <= index) {

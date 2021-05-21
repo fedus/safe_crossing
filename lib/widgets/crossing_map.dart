@@ -42,7 +42,8 @@ class _CrossingMapState extends State<CrossingMap> {
       ),
       layers: [
         TileLayerOptions(
-            urlTemplate: "https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=4tU816YhKHyTCL9UrWcy",
+            //urlTemplate: "https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=4tU816YhKHyTCL9UrWcy",
+            urlTemplate: "https://maps.vdl.lu/arcgis/rest/services/BASEMAP/ORTHO_2019/MapServer/tile/{z}/{y}/{x}",
             maxNativeZoom: 20,
             maxZoom: 22
         ),
