@@ -15,6 +15,21 @@ enum Vote {
   PARKING_CLOSE,
 }
 
+extension VoteToFirebaseProperty on Vote {
+  String get firebaseProperty {
+    switch(this) {
+      case Vote.CANT_SAY:
+        return 'votesNotSure';
+      case Vote.OK:
+        return 'votesOk';
+      case Vote.PARKING_CLOSE:
+        return 'votesTooClose';
+      default:
+        throw new Exception("Invalid vote to firebase property conversion");
+    }
+  }
+}
+
 class CrossingsSwiper extends StatefulWidget {
   @override
   _CrossingsSwiperState createState() => _CrossingsSwiperState();
@@ -34,6 +49,8 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
     fromFirestore: (snapshots, _) =>
         PedestrianCrossing.fromJson(snapshots.data()),
   );
+  final usersRef = FirebaseFirestore.instance
+      .collection('users');
 
   SharedPreferences prefs;
   String userUuid;
@@ -63,13 +80,32 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   }
 
   Future<void> _updateMoviesQuery() async {
-    QuerySnapshot<
+/*    QuerySnapshot<
         PedestrianCrossing> _crossingsSnapshot = await (_lastCrossingSnapshot ==
         null
         ? crossingsRef.orderBy('nodeId').limit(10)
         : crossingsRef.orderBy('nodeId').startAfterDocument(
         _lastCrossingSnapshot).limit(10)
-    ).get();
+    ).get();*/
+
+    var processedCrossings = await usersRef
+        .doc(userUuid)
+        .get()
+        .then((DocumentSnapshot userSnapshot) {
+          if (userSnapshot.exists) {
+            return userSnapshot.get('processedCrossings');
+          }
+
+          return [];
+        });
+
+    print('Already processed crossings: $processedCrossings');
+
+    QuerySnapshot<PedestrianCrossing> _crossingsSnapshot = await crossingsRef
+    .where('nodeId', whereNotIn: processedCrossings)
+    .orderBy('nodeId')
+    .limit(10)
+    .get();
 
     setState(() {
       crossings.addAll(_crossingsSnapshot.docs.map((doc) => doc.data()));
@@ -79,8 +115,43 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
 
   void _vote(String crossingNodeId, Vote vote ) async {
     print('Voting for $crossingNodeId with ${vote.index}');
-    crossingsRef.doc(crossingNodeId.split("/")[1]).collection('votes').doc(userUuid).set({ "vote": vote.index }).then((value) => print("User Added"))
-        .catchError((error) => print("Failed to add user: $error"));
+
+    DocumentReference crossingRef = crossingsRef
+        .doc(crossingNodeId.split("/")[1]);
+
+    DocumentReference voteRef = crossingRef
+        .collection('votes')
+        .doc(userUuid);
+
+    DocumentReference userRef = usersRef.doc(userUuid);
+
+    voteRef
+        .get()
+        .then((voteDoc) {
+          WriteBatch batch = FirebaseFirestore.instance.batch();
+
+          if (voteDoc.exists) {
+            Vote existingVote = Vote.values[voteDoc.get('vote') as int];
+
+            if (existingVote != vote) {
+              batch.update(crossingRef, {
+                existingVote.firebaseProperty: FieldValue.increment(-1),
+                vote.firebaseProperty: FieldValue.increment(1),
+              });
+            }
+          } else {
+            batch.update(crossingRef, {
+              vote.firebaseProperty: FieldValue.increment(1),
+            });
+          }
+
+          batch.set(voteRef, { "vote": vote.index });
+          batch.set(userRef, {"processedCrossings": FieldValue.arrayUnion([crossingNodeId])}, SetOptions(merge: true));
+
+          return batch.commit();
+        })
+        .then((value) => print("Vote cast"))
+        .catchError((error) => print("Failed to cast vote: $error"));
   }
 
   Future<void> _showHelpDialog() async {
