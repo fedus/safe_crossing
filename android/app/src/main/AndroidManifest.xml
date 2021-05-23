@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="eu.dillendapp.safe_crossing.safe_crossing">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
    <application
         android:label="safe_crossing"
         android:icon="@mipmap/ic_launcher">

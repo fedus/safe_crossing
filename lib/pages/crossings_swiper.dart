@@ -8,6 +8,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 enum Vote {
   CANT_SAY,
@@ -96,7 +97,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
             return userSnapshot.get('processedCrossings');
           }
 
-          return [];
+          return ['-'];
         });
 
     print('Already processed crossings: $processedCrossings');
@@ -152,6 +153,16 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
         })
         .then((value) => print("Vote cast"))
         .catchError((error) => print("Failed to cast vote: $error"));
+  }
+
+  void _openStreetViewUrl() async {
+    LatLng streetViewPosition = crossings[swipeController.currentIndex].position;
+    String url = 'http://maps.google.com/maps?q=&layer=c&cbll=${streetViewPosition.latitude},${streetViewPosition.longitude}&cbp=11,direction,0,0,0';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      print('Could not launch $url');
+    }
   }
 
   Future<void> _showHelpDialog() async {
@@ -257,9 +268,14 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                     return index < crossings.length
                         ? Container(
                       alignment: Alignment.center,
-                      child: CrossingMap(
-                        crossingPosition: crossings[index].position,
-                      ),
+                      child: GestureDetector(
+                          // Absorb card swiping in favour of map gestures
+                          onPanStart: (_) => {},
+                          onPanUpdate: (_) => {},
+                          onPanEnd: (_) => {},
+                          child: CrossingMap(
+                            crossingPosition: crossings[index].position,
+                          )),
                     )
                         : Center(child: Text("Hooray! You're at the end."));
                   },
@@ -273,6 +289,15 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                     backgroundColor: Colors.blue,
                     heroTag: 1,
                     onPressed: _showHelpDialog,
+                  )),
+              Positioned(
+                  top: 100,
+                  right: 20,
+                  child: FloatingActionButton(
+                    child: Icon(Icons.streetview),
+                    backgroundColor: Colors.green,
+                    heroTag: 2,
+                    onPressed: _openStreetViewUrl,
                   )),
             ]);
           }),
