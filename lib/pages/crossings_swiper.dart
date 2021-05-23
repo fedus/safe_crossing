@@ -39,6 +39,7 @@ class CrossingsSwiper extends StatefulWidget {
 class _CrossingsSwiperState extends State<CrossingsSwiper> {
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
+  bool rewindButtonVisible = false;
 
   List<PedestrianCrossing> crossings = [];
   QueryDocumentSnapshot<PedestrianCrossing> _lastCrossingSnapshot;
@@ -63,6 +64,9 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   @override
   void initState() {
     super.initState();
+    swipeController.addListener(() => setState(() {
+      rewindButtonVisible = swipeController.canRewind;
+    }));
     _initializationFuture = _initializeUuidAndQuery();
   }
 
@@ -299,6 +303,17 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                     heroTag: 2,
                     onPressed: _openStreetViewUrl,
                   )),
+              Positioned(
+                  top: 20,
+                  left: 20,
+                  child: Visibility(
+                    visible: rewindButtonVisible,
+                    child: FloatingActionButton(
+                            child: Icon(Icons.undo),
+                            backgroundColor: Colors.orange,
+                            heroTag: 3,
+                            onPressed: () => swipeController.rewind(),
+                  ))),
             ]);
           }),
       floatingActionButton: Row(
