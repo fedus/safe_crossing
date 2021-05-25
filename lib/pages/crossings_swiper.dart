@@ -285,9 +285,9 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
 
                     _vote(currentCrossing.nodeId, vote);
 
-                    print("Swiped ${currentCrossing.nodeId}, ${crossingsSnapshots.length} elements in list");
+                    print("Swiped ${currentCrossing.nodeId} at index $index, ${crossingsSnapshots.length} elements in list");
 
-                    if (crossingsSnapshots.length - 2 <= index) {
+                    if (crossingsSnapshots.length - index <= 4) {
                       print("Loading more ...");
                       _updateMoviesQuery();
                     }
