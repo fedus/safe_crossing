@@ -9,7 +9,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:math';
 
 enum Vote {
   CANT_SAY,
@@ -40,10 +39,11 @@ class CrossingsSwiper extends StatefulWidget {
 class _CrossingsSwiperState extends State<CrossingsSwiper> {
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
-  bool rewindButtonVisible = false;
 
   List<QueryDocumentSnapshot<PedestrianCrossing>> crossingsSnapshots = [];
   Future _initializationFuture;
+
+  int percentCompleted = 0;
 
   final crossingsRef = FirebaseFirestore.instance
       .collection('crossings')
@@ -51,6 +51,10 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
     fromFirestore: (snapshots, _) =>
         PedestrianCrossing.fromJson(snapshots.data()),
   );
+
+  final metaDoc = FirebaseFirestore.instance
+      .collection('meta')
+      .doc('meta').snapshots();
 
   SharedPreferences prefs;
   String userUuid;
@@ -62,9 +66,15 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   @override
   void initState() {
     super.initState();
-    swipeController.addListener(() => setState(() {
-      rewindButtonVisible = swipeController.canRewind;
-    }));
+    swipeController.addListener(() => setState(() {}));
+    metaDoc.listen((snapshot) {
+      int totalCrossings = snapshot.get('totalCrossings');
+      int completedCrossings = snapshot.get('crossingsWithEnoughVotes');
+
+      setState(() {
+        percentCompleted = (completedCrossings / totalCrossings * 100).floor();
+      });
+    });
     _initializationFuture = _initializeUuidAndQuery();
   }
 
@@ -279,7 +289,8 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                     }
                   },
                   builder: (context, index, constraints) {
-                    PedestrianCrossing currentCrossing = crossingsSnapshots[index].data();
+                    QueryDocumentSnapshot<PedestrianCrossing> currentCrossingSnapshot = crossingsSnapshots[index];
+                    PedestrianCrossing currentCrossing = currentCrossingSnapshot.data();
 
                     return index < crossingsSnapshots.length
                         ? Container(
@@ -290,9 +301,17 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                           onPanUpdate: (_) => {},
                           onPanEnd: (_) => {},
                           child: Stack(children: [
-                            CrossingMap(
+                            Container(
+                                foregroundDecoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment(-1, -1),
+                                    end: Alignment(-1, -0.75),
+                                    colors: [Colors.black54, Colors.transparent],
+                                  ),
+                                ),
+                          child: CrossingMap(
                               crossingPosition: currentCrossing.position,
-                            ),
+                            )),
                             Positioned(
                                 top: 20,
                                 left: 20,
@@ -300,27 +319,83 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(currentCrossing.neighbourhood, style: TextStyle(
+                                      color: Colors.white,
                                       fontSize: 30,
                                       fontWeight: FontWeight.bold,
                                       shadows: <Shadow>[
                                         Shadow(
                                           offset: Offset(0, 0),
                                           blurRadius: 10.0,
-                                          color: Colors.black54,
+                                          color: Colors.black,
                                         ),
                                       ],
                                     )),
                                     Text(currentCrossing.street, style: TextStyle(
+                                      color: Colors.white,
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                       shadows: <Shadow>[
                                         Shadow(
                                           offset: Offset(0, 0),
                                           blurRadius: 10.0,
-                                          color: Colors.black54,
+                                          color: Colors.black,
                                         ),
                                       ],
-                                    ))
+                                    )),
+                                    Row(children: [
+                                      Padding(child: Chip(
+                                      visualDensity: VisualDensity.compact,
+                                      labelPadding: EdgeInsets.all(5.0),
+                                      avatar: CircleAvatar(
+                                        backgroundColor: Colors.white,
+                                        child: StreamBuilder<DocumentSnapshot>(
+                                          stream: currentCrossingSnapshot.reference.snapshots(),
+                                          builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+                                            if (snapshot.hasError) {
+                                              return Text('?');
+                                            }
+
+                                            if (snapshot.connectionState == ConnectionState.waiting) {
+                                              return CircularProgressIndicator();
+                                            }
+
+                                            return Text(snapshot.data.get('votesTotal').toString(), style: TextStyle(
+                                              color: Colors.orange,
+                                            ));
+                                          },
+                                        ),
+                                      ),
+                                      label: Text(
+                                        'votes',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      backgroundColor: Colors.orange,
+                                      elevation: 8.0,
+                                      shadowColor: Colors.black,
+                                      padding: EdgeInsets.all(6.0),
+                                    ), padding: EdgeInsets.only(top: 10)),
+                                      Padding(child: Chip(
+                                        visualDensity: VisualDensity.compact,
+                                        labelPadding: EdgeInsets.all(5.0),
+                                        avatar: CircleAvatar(
+                                          backgroundColor: Colors.white,
+                                          child: Text(percentCompleted.toString(), style: TextStyle(
+                                            color: Colors.green,
+                                          )),
+                                        ),
+                                        label: Text(
+                                          '% project completion',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        backgroundColor: Colors.green,
+                                        elevation: 8.0,
+                                        shadowColor: Colors.black,
+                                        padding: EdgeInsets.all(6.0),
+                                      ), padding: EdgeInsets.only(top: 10, left: 10))])
                                   ]
                                 )),
                           ])))
@@ -350,7 +425,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                   top: 180,
                   right: 20,
                   child: Visibility(
-                    visible: rewindButtonVisible,
+                    visible: swipeController.canRewind,
                     child: FloatingActionButton(
                             child: Icon(Icons.undo),
                             backgroundColor: Colors.orange,
@@ -389,7 +464,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                         shape: ContinuousRectangleBorder(
                           borderRadius: BorderRadius.circular(28.0),
                         ),
-                        label: Icon(Icons.cancel),
+                        label: Icon(Icons.help),
                         backgroundColor: Colors.orange,
                         onPressed: () =>
                             swipeController.next(
