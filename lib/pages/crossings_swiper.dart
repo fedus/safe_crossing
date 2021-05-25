@@ -54,7 +54,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
 
   final metaDoc = FirebaseFirestore.instance
       .collection('meta')
-      .doc('meta').snapshots();
+      .doc('meta');
 
   SharedPreferences prefs;
   String userUuid;
@@ -67,7 +67,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   void initState() {
     super.initState();
     swipeController.addListener(() => setState(() {}));
-    metaDoc.listen((snapshot) {
+    metaDoc.snapshots().listen((snapshot) {
       int totalCrossings = snapshot.get('totalCrossings');
       int completedCrossings = snapshot.get('crossingsWithEnoughVotes');
 
@@ -146,36 +146,40 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
         .collection('votes')
         .doc(userUuid);
 
-    voteRef
-        .get()
-        .then((voteDoc) {
-          WriteBatch batch = FirebaseFirestore.instance.batch();
+    FirebaseFirestore.instance.runTransaction((transaction) async {
+      DocumentSnapshot<Object> voteSnapshot = await voteRef.get();
+      DocumentSnapshot<PedestrianCrossing> crossingSnapshot = await crossingRef.get();
+      int totalVotesForCrossing = crossingSnapshot.get('votesTotal');
 
-          if (voteDoc.exists) {
-            Vote existingVote = Vote.values[voteDoc.get('vote') as int];
+      if (voteSnapshot.exists) {
+        Vote existingVote = Vote.values[voteSnapshot.get('vote') as int];
 
-            if (existingVote != vote) {
-              batch.update(crossingRef, {
-                existingVote.firebaseProperty: FieldValue.increment(-1),
-                vote.firebaseProperty: FieldValue.increment(1),
-              });
-            }
-          } else {
-            batch.update(crossingRef, {
-              vote.firebaseProperty: FieldValue.increment(1),
-              'votesTotal': FieldValue.increment(1),
-              'unseenBy': FieldValue.arrayRemove([userUuid])
-            });
-          }
+        if (existingVote != vote) {
+          transaction.update(crossingRef, {
+            existingVote.firebaseProperty: FieldValue.increment(-1),
+            vote.firebaseProperty: FieldValue.increment(1),
+          });
+        }
+      } else {
+        transaction.update(crossingRef, {
+          vote.firebaseProperty: FieldValue.increment(1),
+          'votesTotal': FieldValue.increment(1),
+          'unseenBy': FieldValue.arrayRemove([userUuid])
+        });
 
-          batch.set(voteRef, { "vote": vote.index });
+        if (totalVotesForCrossing == 4) { // 5th vote was just cast
+          transaction.update(metaDoc, {
+            'crossingsWithEnoughVotes': FieldValue.increment(1),
+          });
+        }
+      }
 
+      transaction.set(voteRef, { "vote": vote.index });
+    })
+    .then((value) => print("Vote cast"))
+    .catchError((error) => print("Failed to cast vote: $error"));
 
-          return batch.commit();
-        })
-        .then((value) => print("Vote cast"))
-        .catchError((error) => print("Failed to cast vote: $error"));
-  }
+}
 
   void _openStreetViewUrl() async {
     LatLng streetViewPosition = crossingsSnapshots[swipeController.currentIndex].data().position;
