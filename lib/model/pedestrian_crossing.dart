@@ -7,13 +7,17 @@ class PedestrianCrossing {
   final int votesTooClose;
   final int votesOk;
   final int votesNotSure;
+  final String street;
+  final String neighbourhood;
 
   PedestrianCrossing({
     this.nodeId,
     this.position,
     this.votesTooClose,
     this.votesOk,
-    this.votesNotSure
+    this.votesNotSure,
+    this.street,
+    this.neighbourhood,
   });
 
   factory PedestrianCrossing.fromJson(Map<String, dynamic> json) {
@@ -24,6 +28,8 @@ class PedestrianCrossing {
       votesTooClose: json['votes_too_close'] != null ? json['votes_too_close'] as int : 0,
       votesOk: json['votes_ok'] != null ? json['votes_ok'] as int : 0,
       votesNotSure: json['votes_not_sure'] != null ? json['votes_not_sure'] as int : 0,
+      street: json['street'] != null ? json['street'] as String : '',
+      neighbourhood: json['neighbourhood'] != null ? json['neighbourhood'] as String : '',
     );
   }
 }

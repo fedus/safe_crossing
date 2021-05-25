@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:math';
 
 enum Vote {
   CANT_SAY,
@@ -41,8 +42,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
   bool rewindButtonVisible = false;
 
-  List<PedestrianCrossing> crossings = [];
-  QueryDocumentSnapshot<PedestrianCrossing> _lastCrossingSnapshot;
+  List<QueryDocumentSnapshot<PedestrianCrossing>> crossingsSnapshots = [];
   Future _initializationFuture;
 
   final crossingsRef = FirebaseFirestore.instance
@@ -51,8 +51,6 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
     fromFirestore: (snapshots, _) =>
         PedestrianCrossing.fromJson(snapshots.data()),
   );
-  final usersRef = FirebaseFirestore.instance
-      .collection('users');
 
   SharedPreferences prefs;
   String userUuid;
@@ -70,51 +68,61 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
     _initializationFuture = _initializeUuidAndQuery();
   }
 
-  Future<String> getUserUuid() async {
+  Future<bool> getUserUuid() async {
     prefs = await SharedPreferences.getInstance();
+
+    bool isNewUuid = !prefs.containsKey('userUuid');
+
     userUuid = prefs.getString('userUuid') ?? Uuid().v4();
     prefs.setString('userUuid', userUuid);
-    print(userUuid);
 
-    return userUuid;
+    print('User ID: $userUuid');
+
+    return isNewUuid;
   }
 
   Future<void> _initializeUuidAndQuery() async {
-    await getUserUuid();
+    if (await getUserUuid()) {
+      await _initializeUserEligibility();
+      print("User eligible.");
+    }
+
     return _updateMoviesQuery();
   }
 
+  Future<void> _initializeUserEligibility() async {
+    WriteBatch batch = FirebaseFirestore.instance.batch();
+
+    QuerySnapshot<PedestrianCrossing> allCrossings = await crossingsRef.get();
+
+    int index = 0;
+
+    await Future.forEach(allCrossings.docs, (document) async {
+      print('Working off ${document.id}');
+      batch.update(document.reference, { 'unseenBy': FieldValue.arrayUnion([userUuid]) });
+
+      if ((index + 1) % 499 == 0) {
+        print('Committing intermediate batch at index $index');
+        await batch.commit();
+        batch = FirebaseFirestore.instance.batch();
+      }
+
+      index++;
+    });
+
+    print("Committing user eligibility ...");
+    return batch.commit();
+  }
+
   Future<void> _updateMoviesQuery() async {
-/*    QuerySnapshot<
-        PedestrianCrossing> _crossingsSnapshot = await (_lastCrossingSnapshot ==
-        null
-        ? crossingsRef.orderBy('nodeId').limit(10)
-        : crossingsRef.orderBy('nodeId').startAfterDocument(
-        _lastCrossingSnapshot).limit(10)
-    ).get();*/
-
-    var processedCrossings = await usersRef
-        .doc(userUuid)
-        .get()
-        .then((DocumentSnapshot userSnapshot) {
-          if (userSnapshot.exists) {
-            return userSnapshot.get('processedCrossings');
-          }
-
-          return ['-'];
-        });
-
-    print('Already processed crossings: $processedCrossings');
-
     QuerySnapshot<PedestrianCrossing> _crossingsSnapshot = await crossingsRef
-    .where('nodeId', whereNotIn: processedCrossings)
-    .orderBy('nodeId')
-    .limit(10)
-    .get();
+        .where('unseenBy', arrayContains: userUuid)
+        .orderBy('votesTotal')
+        .limit(10)
+        .get();
 
     setState(() {
-      crossings.addAll(_crossingsSnapshot.docs.map((doc) => doc.data()));
-      _lastCrossingSnapshot = _crossingsSnapshot.docs.last;
+      crossingsSnapshots.addAll(_crossingsSnapshot.docs);
     });
   }
 
@@ -127,8 +135,6 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
     DocumentReference voteRef = crossingRef
         .collection('votes')
         .doc(userUuid);
-
-    DocumentReference userRef = usersRef.doc(userUuid);
 
     voteRef
         .get()
@@ -147,11 +153,13 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
           } else {
             batch.update(crossingRef, {
               vote.firebaseProperty: FieldValue.increment(1),
+              'votesTotal': FieldValue.increment(1),
+              'unseenBy': FieldValue.arrayRemove([userUuid])
             });
           }
 
           batch.set(voteRef, { "vote": vote.index });
-          batch.set(userRef, {"processedCrossings": FieldValue.arrayUnion([crossingNodeId])}, SetOptions(merge: true));
+
 
           return batch.commit();
         })
@@ -160,7 +168,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   }
 
   void _openStreetViewUrl() async {
-    LatLng streetViewPosition = crossings[swipeController.currentIndex].position;
+    LatLng streetViewPosition = crossingsSnapshots[swipeController.currentIndex].data().position;
     String url = 'http://maps.google.com/maps?q=&layer=c&cbll=${streetViewPosition.latitude},${streetViewPosition.longitude}&cbp=11,direction,0,0,0';
     if (await canLaunch(url)) {
       await launch(url);
@@ -259,17 +267,21 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                         vote = Vote.CANT_SAY;
                     }
 
-                    _vote(crossings[index].nodeId, vote);
+                    PedestrianCrossing currentCrossing = crossingsSnapshots[index].data();
 
-                    print("Swiped ${crossings[index].nodeId}, ${crossings
-                        .length} elements in list");
-                    if (crossings.length - 2 <= index) {
+                    _vote(currentCrossing.nodeId, vote);
+
+                    print("Swiped ${currentCrossing.nodeId}, ${crossingsSnapshots.length} elements in list");
+
+                    if (crossingsSnapshots.length - 2 <= index) {
                       print("Loading more ...");
                       _updateMoviesQuery();
                     }
                   },
                   builder: (context, index, constraints) {
-                    return index < crossings.length
+                    PedestrianCrossing currentCrossing = crossingsSnapshots[index].data();
+
+                    return index < crossingsSnapshots.length
                         ? Container(
                       alignment: Alignment.center,
                       child: GestureDetector(
@@ -277,10 +289,41 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                           onPanStart: (_) => {},
                           onPanUpdate: (_) => {},
                           onPanEnd: (_) => {},
-                          child: CrossingMap(
-                            crossingPosition: crossings[index].position,
-                          )),
-                    )
+                          child: Stack(children: [
+                            CrossingMap(
+                              crossingPosition: currentCrossing.position,
+                            ),
+                            Positioned(
+                                top: 20,
+                                left: 20,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(currentCrossing.neighbourhood, style: TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold,
+                                      shadows: <Shadow>[
+                                        Shadow(
+                                          offset: Offset(0, 0),
+                                          blurRadius: 10.0,
+                                          color: Colors.black54,
+                                        ),
+                                      ],
+                                    )),
+                                    Text(currentCrossing.street, style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      shadows: <Shadow>[
+                                        Shadow(
+                                          offset: Offset(0, 0),
+                                          blurRadius: 10.0,
+                                          color: Colors.black54,
+                                        ),
+                                      ],
+                                    ))
+                                  ]
+                                )),
+                          ])))
                         : Center(child: Text("Hooray! You're at the end."));
                   },
                 ),
@@ -304,8 +347,8 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                     onPressed: _openStreetViewUrl,
                   )),
               Positioned(
-                  top: 20,
-                  left: 20,
+                  top: 180,
+                  right: 20,
                   child: Visibility(
                     visible: rewindButtonVisible,
                     child: FloatingActionButton(
