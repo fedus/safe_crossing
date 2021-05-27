@@ -114,48 +114,10 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   }
 
   void _vote(String crossingNodeId, Vote vote ) async {
-    print('Voting for $crossingNodeId with ${vote.index}');
-
-    DocumentReference crossingRef = crossingsRef
-        .doc(crossingNodeId.split("/")[1]);
-
-    DocumentReference voteRef = crossingRef
-        .collection('votes')
-        .doc(userUuid);
-
-    FirebaseFirestore.instance.runTransaction((transaction) async {
-      DocumentSnapshot<Object> voteSnapshot = await voteRef.get();
-      DocumentSnapshot<PedestrianCrossing> crossingSnapshot = await crossingRef.get();
-      int totalVotesForCrossing = crossingSnapshot.get('votesTotal');
-
-      if (voteSnapshot.exists) {
-        Vote existingVote = Vote.values[voteSnapshot.get('vote') as int];
-
-        if (existingVote != vote) {
-          transaction.update(crossingRef, {
-            existingVote.firebaseProperty: FieldValue.increment(-1),
-            vote.firebaseProperty: FieldValue.increment(1),
-          });
-        }
-      } else {
-        transaction.update(crossingRef, {
-          vote.firebaseProperty: FieldValue.increment(1),
-          'votesTotal': FieldValue.increment(1),
-          'unseenBy': FieldValue.arrayRemove([userUuid])
-        });
-
-        if (totalVotesForCrossing == 4) { // 5th vote was just cast
-          transaction.update(metaDoc, {
-            'crossingsWithEnoughVotes': FieldValue.increment(1),
-          });
-        }
-      }
-
-      transaction.set(voteRef, { "vote": vote.index });
-    })
-    .then((value) => print("Vote cast"))
-    .catchError((error) => print("Failed to cast vote: $error"));
-}
+    HttpsCallable voteCallable = functions.httpsCallable('vote');
+    HttpsCallableResult<String> voteResult = await voteCallable(({'userUuid': userUuid, 'crossingNodeId': crossingNodeId, 'vote': vote.index}));
+    print("Vote result for $crossingNodeId: ${voteResult.data}");
+  }
 
   void _openStreetViewUrl() async {
     LatLng streetViewPosition = crossingsSnapshots[swipeController.currentIndex].data().position;
@@ -263,7 +225,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
 
                     print("Swiped ${currentCrossing.nodeId} at index $index, ${crossingsSnapshots.length} elements in list");
 
-                    if (crossingsSnapshots.length - index <= 4) {
+                    if (crossingsSnapshots.length - index <= 5) {
                       print("Loading more ...");
                       _updateMoviesQuery();
                     }
