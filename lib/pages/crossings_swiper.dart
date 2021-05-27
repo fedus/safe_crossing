@@ -6,6 +6,7 @@ import 'package:safe_crossing/model/pedestrian_crossing.dart';
 import 'package:swipable_stack/swipable_stack.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -37,6 +38,7 @@ class CrossingsSwiper extends StatefulWidget {
 }
 
 class _CrossingsSwiperState extends State<CrossingsSwiper> {
+  FirebaseFunctions functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
 
@@ -92,36 +94,11 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   }
 
   Future<void> _initializeUuidAndQuery() async {
-    if (await getUserUuid()) {
-      await _initializeUserEligibility();
-      print("User eligible.");
-    }
+    await getUserUuid();
+    HttpsCallableResult<String> userInitializationResult = await functions.httpsCallable('initializeUser')({'userUuid': userUuid});
+    print("User eligibility: ${userInitializationResult.data}");
 
     return _updateMoviesQuery();
-  }
-
-  Future<void> _initializeUserEligibility() async {
-    WriteBatch batch = FirebaseFirestore.instance.batch();
-
-    QuerySnapshot<PedestrianCrossing> allCrossings = await crossingsRef.get();
-
-    int index = 0;
-
-    await Future.forEach(allCrossings.docs, (document) async {
-      print('Working off ${document.id}');
-      batch.update(document.reference, { 'unseenBy': FieldValue.arrayUnion([userUuid]) });
-
-      if ((index + 1) % 499 == 0) {
-        print('Committing intermediate batch at index $index');
-        await batch.commit();
-        batch = FirebaseFirestore.instance.batch();
-      }
-
-      index++;
-    });
-
-    print("Committing user eligibility ...");
-    return batch.commit();
   }
 
   Future<void> _updateMoviesQuery() async {
@@ -178,7 +155,6 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
     })
     .then((value) => print("Vote cast"))
     .catchError((error) => print("Failed to cast vote: $error"));
-
 }
 
   void _openStreetViewUrl() async {
