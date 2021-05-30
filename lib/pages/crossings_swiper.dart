@@ -10,6 +10,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 enum Vote {
   CANT_SAY,
@@ -46,6 +47,11 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   Future _initializationFuture;
 
   int percentCompleted = 0;
+  double percentOk = 0;
+  double percentNotSure = 0;
+  double percentTooClose = 0;
+  double percentTie = 0;
+  double percentPlaceholder = 100;
 
   final crossingsRef = FirebaseFirestore.instance
       .collection('crossings')
@@ -72,9 +78,19 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
     metaDoc.snapshots().listen((snapshot) {
       int totalCrossings = snapshot.get('totalCrossings');
       int completedCrossings = snapshot.get('crossingsWithEnoughVotes');
+      int okCrossings = snapshot.get('votesOk');
+      int notSureCrossings = snapshot.get('votesNotSure');
+      int tooCloseCrossings = snapshot.get('votesTooClose');
+      int tieCrossings = snapshot.get('votesTie');
 
       setState(() {
         percentCompleted = (completedCrossings / totalCrossings * 100).floor();
+        percentOk = okCrossings / completedCrossings * 100;
+        percentNotSure = notSureCrossings / completedCrossings * 100;
+        percentTooClose = tooCloseCrossings / completedCrossings * 100;
+        percentTie = tieCrossings / completedCrossings * 100;
+
+        percentPlaceholder = completedCrossings > 0 ? 0 : 100;
       });
     });
     _initializationFuture = _initializeUuidAndQuery();
@@ -98,18 +114,34 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
     HttpsCallableResult<String> userInitializationResult = await functions.httpsCallable('initializeUser')({'userUuid': userUuid});
     print("User eligibility: ${userInitializationResult.data}");
 
-    return _updateMoviesQuery();
+    return _updateMoviesQuery(0);
   }
 
-  Future<void> _updateMoviesQuery() async {
-    QuerySnapshot<PedestrianCrossing> _crossingsSnapshot = await crossingsRef
-        .where('unseenBy', arrayContains: userUuid)
-        .orderBy('votesTotal')
+  Future<void> _updateMoviesQuery(currentIndex) async {
+    Query<PedestrianCrossing> crossingQuery;
+
+    if (currentIndex > 0 ) {
+      crossingQuery = crossingsRef
+          .where('unseenBy', arrayContains: userUuid)
+          .orderBy('votesTotal')
+          .startAfterDocument(crossingsSnapshots.last);
+    } else {
+      crossingQuery = crossingsRef
+          .where('unseenBy', arrayContains: userUuid)
+          .orderBy('votesTotal');
+    }
+
+    QuerySnapshot<PedestrianCrossing> _crossingsSnapshot = await crossingQuery
         .limit(10)
         .get();
 
     setState(() {
       crossingsSnapshots.addAll(_crossingsSnapshot.docs);
+    });
+
+    crossingsSnapshots.asMap().forEach((index, cSnap) {
+      String id = cSnap.get('nodeId');
+      print('Id $id at index $index');
     });
   }
 
@@ -227,7 +259,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
 
                     if (crossingsSnapshots.length - index <= 5) {
                       print("Loading more ...");
-                      _updateMoviesQuery();
+                      _updateMoviesQuery(index);
                     }
                   },
                   builder: (context, index, constraints) {
@@ -328,7 +360,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                                           )),
                                         ),
                                         label: Text(
-                                          '% project completion',
+                                          '% complete',
                                           style: TextStyle(
                                             color: Colors.white,
                                           ),
@@ -346,7 +378,51 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                 ),
               ),
               Positioned(
-                  top: 20,
+                top: 20,
+                right: 20,
+                child: SizedBox(width: 60, height: 60, child: Material(type: MaterialType.circle, color: Colors.blue.withAlpha(1), elevation: 10, child: PieChart(
+                  PieChartData(
+                      borderData: FlBorderData(
+                        show: false,
+                      ),
+                      sectionsSpace: 0,
+                      centerSpaceRadius: 15,
+                      sections: [
+                        PieChartSectionData(
+                          color: Colors.green,
+                          value: percentOk,
+                          showTitle: false,
+                          radius: 10,
+                        ),
+                        PieChartSectionData(
+                          color: Colors.orange,
+                          value: percentNotSure,
+                          showTitle: false,
+                          radius: 10,
+                        ),
+                        PieChartSectionData(
+                          color: Colors.red,
+                          value: percentTooClose,
+                          showTitle: false,
+                          radius: 10,
+                        ),
+                        PieChartSectionData(
+                          color: Colors.white60,
+                          value: percentTie,
+                          radius: 10,
+                          showTitle: false,
+                        ),
+                        PieChartSectionData(
+                          color: const Color(0xff0293ee).withAlpha(1),
+                          value: percentPlaceholder,
+                          radius: 10,
+                          showTitle: false,
+                        ),
+                      ]),
+                )),
+              )),
+              Positioned(
+                  top: 100,
                   right: 20,
                   child: FloatingActionButton(
                     child: Icon(Icons.help),
@@ -355,7 +431,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                     onPressed: _showHelpDialog,
                   )),
               Positioned(
-                  top: 100,
+                  top: 180,
                   right: 20,
                   child: FloatingActionButton(
                     child: Icon(Icons.streetview),
@@ -364,7 +440,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                     onPressed: _openStreetViewUrl,
                   )),
               Positioned(
-                  top: 180,
+                  top: 260,
                   right: 20,
                   child: Visibility(
                     visible: swipeController.canRewind,
