@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:safe_crossing/pages/crossings_swiper.dart';
+import 'package:safe_crossing/widgets/big_loading.dart';
 
 void main() {
   runApp(SafeCrossingApp());
@@ -55,14 +56,8 @@ class _SafeCrossingAppState extends State<SafeCrossingApp> {
           }
 
           return Scaffold(
-              appBar: AppBar(
-                title: Text("Safe Crossing"),
-              ),
-              body: Center(
-                  child: CircularProgressIndicator()
-              )
-          );
-        }
+            body: BigLoading());
+          }
       )
     );
   }

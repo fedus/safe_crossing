@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
 import 'package:safe_crossing/widgets/crossing_map.dart';
 import 'package:safe_crossing/model/pedestrian_crossing.dart';
+import 'package:safe_crossing/widgets/big_loading.dart';
 
 import 'package:swipable_stack/swipable_stack.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -228,9 +229,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
 
             // Once complete, show your application
             if (snapshot.connectionState != ConnectionState.done) {
-              return Center(
-                  child: CircularProgressIndicator()
-              );
+              return BigLoading();
             }
 
             return Stack(children: [
