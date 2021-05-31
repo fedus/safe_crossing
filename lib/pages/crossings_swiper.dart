@@ -214,9 +214,9 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+/*      appBar: AppBar(
         title: Text("Safe Crossing"),
-      ),
+      ),*/
       body: FutureBuilder(
           future: _initializationFuture,
           builder: (context, snapshot) {
@@ -286,7 +286,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                           child: CrossingMap(
                               crossingPosition: currentCrossing.position,
                             )),
-                            Positioned(
+                            SafeArea(child: Stack(children: [Positioned(
                                 top: 20,
                                 left: 20,
                                 child: Column(
@@ -371,13 +371,13 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                                         padding: EdgeInsets.all(6.0),
                                       ), padding: EdgeInsets.only(top: 10, left: 10))])
                                   ]
-                                )),
+                                ))])),
                           ])))
                         : Center(child: Text("Hooray! You're at the end."));
                   },
                 ),
               ),
-              Positioned(
+              SafeArea(child: Stack(children: [Positioned(
                   top: 20,
                   right: 20,
                   child: FloatingActionButton(
@@ -451,7 +451,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                             backgroundColor: Colors.orange,
                             heroTag: 3,
                             onPressed: () => swipeController.rewind(),
-                  ))),
+                  )))])),
             ]);
           }),
       floatingActionButton: Row(
