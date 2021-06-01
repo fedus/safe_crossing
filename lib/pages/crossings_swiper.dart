@@ -43,6 +43,9 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   FirebaseFunctions functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
+  
+  double actionButtonsHeight = 10;
+  double actionButtonsOpacity = 0;
 
   List<QueryDocumentSnapshot<PedestrianCrossing>> crossingsSnapshots = [];
   Future _initializationFuture;
@@ -115,10 +118,13 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
     HttpsCallableResult<String> userInitializationResult = await functions.httpsCallable('initializeUser')({'userUuid': userUuid});
     print("User eligibility: ${userInitializationResult.data}");
 
-    return _updateMoviesQuery(0);
+    await _updateCrossingsQuery(0);
+
+    actionButtonsHeight = 100;
+    actionButtonsOpacity = 1;
   }
 
-  Future<void> _updateMoviesQuery(currentIndex) async {
+  Future<void> _updateCrossingsQuery(currentIndex) async {
     Query<PedestrianCrossing> crossingQuery;
 
     if (currentIndex > 0 ) {
@@ -221,243 +227,253 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
       body: FutureBuilder(
           future: _initializationFuture,
           builder: (context, snapshot) {
+            Widget dynWidget;
+
             if (snapshot.hasError) {
-              return Center(
+              dynWidget = Center(
                 child: Text("Something went wrong. Please restart the application.")
               );
-            }
+            } else if (snapshot.connectionState != ConnectionState.done) {
+              dynWidget = BigLoading();
+            } else {
+              dynWidget = Stack(children: [
+                Container(
+                  child: SwipableStack(
+                    controller: swipeController,
+                    onSwipeCompleted: (index, direction) {
+                      Vote vote;
 
-            // Once complete, show your application
-            if (snapshot.connectionState != ConnectionState.done) {
-              return BigLoading();
-            }
+                      switch (direction) {
+                        case SwipeDirection.left:
+                          vote = Vote.OK;
+                          break;
+                        case SwipeDirection.right:
+                          vote = Vote.PARKING_CLOSE;
+                          break;
+                        default:
+                          vote = Vote.CANT_SAY;
+                      }
 
-            return Stack(children: [
-              Container(
-                child: SwipableStack(
-                  controller: swipeController,
-                  onSwipeCompleted: (index, direction) {
-                    Vote vote;
+                      PedestrianCrossing currentCrossing = crossingsSnapshots[index].data();
 
-                    switch (direction) {
-                      case SwipeDirection.left:
-                        vote = Vote.OK;
-                        break;
-                      case SwipeDirection.right:
-                        vote = Vote.PARKING_CLOSE;
-                        break;
-                      default:
-                        vote = Vote.CANT_SAY;
-                    }
+                      _vote(currentCrossing.nodeId, vote);
 
-                    PedestrianCrossing currentCrossing = crossingsSnapshots[index].data();
+                      print("Swiped ${currentCrossing.nodeId} at index $index, ${crossingsSnapshots.length} elements in list");
 
-                    _vote(currentCrossing.nodeId, vote);
+                      if (crossingsSnapshots.length - index <= 5) {
+                        print("Loading more ...");
+                        _updateCrossingsQuery(index);
+                      }
+                    },
+                    builder: (context, index, constraints) {
+                      QueryDocumentSnapshot<PedestrianCrossing> currentCrossingSnapshot = crossingsSnapshots[index];
+                      PedestrianCrossing currentCrossing = currentCrossingSnapshot.data();
 
-                    print("Swiped ${currentCrossing.nodeId} at index $index, ${crossingsSnapshots.length} elements in list");
-
-                    if (crossingsSnapshots.length - index <= 5) {
-                      print("Loading more ...");
-                      _updateMoviesQuery(index);
-                    }
-                  },
-                  builder: (context, index, constraints) {
-                    QueryDocumentSnapshot<PedestrianCrossing> currentCrossingSnapshot = crossingsSnapshots[index];
-                    PedestrianCrossing currentCrossing = currentCrossingSnapshot.data();
-
-                    return index < crossingsSnapshots.length
-                        ? Container(
-                      alignment: Alignment.center,
-                      child: GestureDetector(
-                          // Absorb card swiping in favour of map gestures
-                          onPanStart: (_) => {},
-                          onPanUpdate: (_) => {},
-                          onPanEnd: (_) => {},
-                          child: Stack(children: [
-                            Container(
-                                foregroundDecoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment(-1, -1),
-                                    end: Alignment(-1, -0.75),
-                                    colors: [Colors.black54, Colors.transparent],
-                                  ),
-                                ),
-                          child: CrossingMap(
-                              crossingPosition: currentCrossing.position,
-                            )),
-                            SafeArea(child: Stack(children: [Positioned(
-                                top: 20,
-                                left: 20,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(currentCrossing.neighbourhood, style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.bold,
-                                      shadows: <Shadow>[
-                                        Shadow(
-                                          offset: Offset(0, 0),
-                                          blurRadius: 10.0,
-                                          color: Colors.black,
-                                        ),
-                                      ],
-                                    )),
-                                    Text(currentCrossing.street, style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      shadows: <Shadow>[
-                                        Shadow(
-                                          offset: Offset(0, 0),
-                                          blurRadius: 10.0,
-                                          color: Colors.black,
-                                        ),
-                                      ],
-                                    )),
-                                    Row(children: [
-                                      Padding(child: Chip(
-                                      visualDensity: VisualDensity.compact,
-                                      labelPadding: EdgeInsets.all(5.0),
-                                      avatar: CircleAvatar(
-                                        backgroundColor: Colors.white,
-                                        child: StreamBuilder<DocumentSnapshot>(
-                                          stream: currentCrossingSnapshot.reference.snapshots(),
-                                          builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-                                            if (snapshot.hasError) {
-                                              return Text('?');
-                                            }
-
-                                            if (snapshot.connectionState == ConnectionState.waiting) {
-                                              return CircularProgressIndicator();
-                                            }
-
-                                            return Text(snapshot.data.get('votesTotal').toString(), style: TextStyle(
-                                              color: Colors.orange,
-                                            ));
-                                          },
-                                        ),
+                      return index < crossingsSnapshots.length
+                          ? Container(
+                          alignment: Alignment.center,
+                          child: GestureDetector(
+                            // Absorb card swiping in favour of map gestures
+                              onPanStart: (_) => {},
+                              onPanUpdate: (_) => {},
+                              onPanEnd: (_) => {},
+                              child: Stack(children: [
+                                Container(
+                                    foregroundDecoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment(-1, -1),
+                                        end: Alignment(-1, -0.75),
+                                        colors: [Colors.black54, Colors.transparent],
                                       ),
-                                      label: Text(
-                                        'votes',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      backgroundColor: Colors.orange,
-                                      elevation: 8.0,
-                                      shadowColor: Colors.black,
-                                      padding: EdgeInsets.all(6.0),
-                                    ), padding: EdgeInsets.only(top: 10)),
-                                      Padding(child: Chip(
-                                        visualDensity: VisualDensity.compact,
-                                        labelPadding: EdgeInsets.all(5.0),
-                                        avatar: CircleAvatar(
-                                          backgroundColor: Colors.white,
-                                          child: Text(percentCompleted.toString(), style: TextStyle(
-                                            color: Colors.green,
-                                          )),
-                                        ),
-                                        label: Text(
-                                          '% complete',
-                                          style: TextStyle(
+                                    ),
+                                    child: CrossingMap(
+                                      crossingPosition: currentCrossing.position,
+                                    )),
+                                SafeArea(child: Stack(children: [Positioned(
+                                    top: 20,
+                                    left: 20,
+                                    child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(currentCrossing.neighbourhood, style: TextStyle(
                                             color: Colors.white,
-                                          ),
-                                        ),
-                                        backgroundColor: Colors.green,
-                                        elevation: 8.0,
-                                        shadowColor: Colors.black,
-                                        padding: EdgeInsets.all(6.0),
-                                      ), padding: EdgeInsets.only(top: 10, left: 10))])
-                                  ]
-                                ))])),
-                          ])))
-                        : Center(child: Text("Hooray! You're at the end."));
-                  },
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.bold,
+                                            shadows: <Shadow>[
+                                              Shadow(
+                                                offset: Offset(0, 0),
+                                                blurRadius: 10.0,
+                                                color: Colors.black,
+                                              ),
+                                            ],
+                                          )),
+                                          Text(currentCrossing.street, style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            shadows: <Shadow>[
+                                              Shadow(
+                                                offset: Offset(0, 0),
+                                                blurRadius: 10.0,
+                                                color: Colors.black,
+                                              ),
+                                            ],
+                                          )),
+                                          Row(children: [
+                                            Padding(child: Chip(
+                                              visualDensity: VisualDensity.compact,
+                                              labelPadding: EdgeInsets.all(5.0),
+                                              avatar: CircleAvatar(
+                                                backgroundColor: Colors.white,
+                                                child: StreamBuilder<DocumentSnapshot>(
+                                                  stream: currentCrossingSnapshot.reference.snapshots(),
+                                                  builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+                                                    if (snapshot.hasError) {
+                                                      return Text('?');
+                                                    }
+
+                                                    if (snapshot.connectionState == ConnectionState.waiting) {
+                                                      return CircularProgressIndicator();
+                                                    }
+
+                                                    return Text(snapshot.data.get('votesTotal').toString(), style: TextStyle(
+                                                      color: Colors.orange,
+                                                    ));
+                                                  },
+                                                ),
+                                              ),
+                                              label: Text(
+                                                'votes',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              backgroundColor: Colors.orange,
+                                              elevation: 8.0,
+                                              shadowColor: Colors.black,
+                                              padding: EdgeInsets.all(6.0),
+                                            ), padding: EdgeInsets.only(top: 10)),
+                                            Padding(child: Chip(
+                                              visualDensity: VisualDensity.compact,
+                                              labelPadding: EdgeInsets.all(5.0),
+                                              avatar: CircleAvatar(
+                                                backgroundColor: Colors.white,
+                                                child: Text(percentCompleted.toString(), style: TextStyle(
+                                                  color: Colors.green,
+                                                )),
+                                              ),
+                                              label: Text(
+                                                '% complete',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                              backgroundColor: Colors.green,
+                                              elevation: 8.0,
+                                              shadowColor: Colors.black,
+                                              padding: EdgeInsets.all(6.0),
+                                            ), padding: EdgeInsets.only(top: 10, left: 10))])
+                                        ]
+                                    ))])),
+                              ])))
+                          : Center(child: Text("Hooray! You're at the end."));
+                    },
+                  ),
                 ),
-              ),
-              SafeArea(child: Stack(children: [Positioned(
-                  top: 20,
-                  right: 20,
-                  child: FloatingActionButton(
-                    child: Icon(Icons.help),
-                    backgroundColor: Colors.blue,
-                    heroTag: 1,
-                    onPressed: _showHelpDialog,
-                  )),
-              Positioned(
-                  top: 100,
-                  right: 20,
-                  child: FloatingActionButton(
-                    child: Icon(Icons.streetview),
-                    backgroundColor: Colors.green,
-                    heroTag: 2,
-                    onPressed: _openStreetViewUrl,
-                  )),
-              Positioned(
-                  top: 180,
-                  right: 20,
-                  child: Visibility(
-                    visible: percentPlaceholder < 100,
-                      child: SizedBox(width: 60, height: 60, child: Material(type: MaterialType.circle, color: Colors.blue.withAlpha(1), elevation: 10, child: PieChart(
-                    PieChartData(
-                        borderData: FlBorderData(
-                          show: false,
-                        ),
-                        sectionsSpace: 0,
-                        centerSpaceRadius: 15,
-                        sections: [
-                          PieChartSectionData(
-                            color: Colors.green,
-                            value: percentOk,
-                            showTitle: false,
-                            radius: 10,
-                          ),
-                          PieChartSectionData(
-                            color: Colors.orange,
-                            value: percentNotSure,
-                            showTitle: false,
-                            radius: 10,
-                          ),
-                          PieChartSectionData(
-                            color: Colors.red,
-                            value: percentTooClose,
-                            showTitle: false,
-                            radius: 10,
-                          ),
-                          PieChartSectionData(
-                            color: Colors.white60,
-                            value: percentTie,
-                            radius: 10,
-                            showTitle: false,
-                          ),
-                          PieChartSectionData(
-                            color: const Color(0xff0293ee).withAlpha(1),
-                            value: percentPlaceholder,
-                            radius: 10,
-                            showTitle: false,
-                          ),
-                        ]),
-                  )),
-                  ))),
-              Positioned(
-                  top: percentPlaceholder < 100 ? 260 : 180,
-                  right: 20,
-                  child: Visibility(
-                    visible: swipeController.canRewind,
+                SafeArea(child: Stack(children: [Positioned(
+                    top: 20,
+                    right: 20,
                     child: FloatingActionButton(
+                      child: Icon(Icons.help),
+                      backgroundColor: Colors.blue,
+                      heroTag: 1,
+                      onPressed: _showHelpDialog,
+                    )),
+                  Positioned(
+                      top: 100,
+                      right: 20,
+                      child: FloatingActionButton(
+                        child: Icon(Icons.streetview),
+                        backgroundColor: Colors.green,
+                        heroTag: 2,
+                        onPressed: _openStreetViewUrl,
+                      )),
+                  Positioned(
+                      top: 180,
+                      right: 20,
+                      child: Visibility(
+                          visible: percentPlaceholder < 100,
+                          child: SizedBox(width: 60, height: 60, child: Material(type: MaterialType.circle, color: Colors.blue.withAlpha(1), elevation: 10, child: PieChart(
+                            PieChartData(
+                                borderData: FlBorderData(
+                                  show: false,
+                                ),
+                                sectionsSpace: 0,
+                                centerSpaceRadius: 15,
+                                sections: [
+                                  PieChartSectionData(
+                                    color: Colors.green,
+                                    value: percentOk,
+                                    showTitle: false,
+                                    radius: 10,
+                                  ),
+                                  PieChartSectionData(
+                                    color: Colors.orange,
+                                    value: percentNotSure,
+                                    showTitle: false,
+                                    radius: 10,
+                                  ),
+                                  PieChartSectionData(
+                                    color: Colors.red,
+                                    value: percentTooClose,
+                                    showTitle: false,
+                                    radius: 10,
+                                  ),
+                                  PieChartSectionData(
+                                    color: Colors.white60,
+                                    value: percentTie,
+                                    radius: 10,
+                                    showTitle: false,
+                                  ),
+                                  PieChartSectionData(
+                                    color: const Color(0xff0293ee).withAlpha(1),
+                                    value: percentPlaceholder,
+                                    radius: 10,
+                                    showTitle: false,
+                                  ),
+                                ]),
+                          )),
+                          ))),
+                  Positioned(
+                      top: percentPlaceholder < 100 ? 260 : 180,
+                      right: 20,
+                      child: Visibility(
+                          visible: swipeController.canRewind,
+                          child: FloatingActionButton(
                             child: Icon(Icons.undo),
                             backgroundColor: Colors.orange,
                             heroTag: 3,
                             onPressed: () => swipeController.rewind(),
-                  )))])),
-            ]);
+                          )))])),
+              ]);
+            }
+
+            return AnimatedSwitcher(
+                duration: Duration(seconds: 1),
+                child: dynWidget
+            );
           }),
-      floatingActionButton: Row(
+      floatingActionButton: AnimatedOpacity(
+        duration: Duration(milliseconds: 500),
+        opacity: actionButtonsOpacity,
+    child: AnimatedContainer(
+          duration: Duration(seconds: 1),
+          height: actionButtonsHeight,
+          child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Container(
-                height: 100.0,
+                //height: 100.0,
                 width: MediaQuery
                     .of(context)
                     .size
@@ -473,7 +489,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                             swipeController.next(
                                 swipeDirection: SwipeDirection.left)))),
             Container(
-                height: 100.0,
+                //height: 100.0,
                 width: MediaQuery
                     .of(context)
                     .size
@@ -489,7 +505,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                             swipeController.next(
                                 swipeDirection: SwipeDirection.down)))),
             Container(
-                height: 100.0,
+                //height: 100.0,
                 width: MediaQuery
                     .of(context)
                     .size
@@ -504,7 +520,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
                         onPressed: () =>
                             swipeController.next(
                                 swipeDirection: SwipeDirection.right)))),
-          ]),
+          ]))),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
