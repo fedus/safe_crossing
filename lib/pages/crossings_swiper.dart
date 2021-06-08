@@ -4,6 +4,8 @@ import 'package:safe_crossing/widgets/crossing_map.dart';
 import 'package:safe_crossing/model/pedestrian_crossing.dart';
 import 'package:safe_crossing/widgets/big_loading.dart';
 import 'package:safe_crossing/widgets/voting_buttons.dart';
+import 'package:safe_crossing/widgets/help_dialog.dart';
+import 'package:safe_crossing/model/vote.dart';
 
 import 'package:swipable_stack/swipable_stack.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -13,27 +15,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:fl_chart/fl_chart.dart';
-
-enum Vote {
-  CANT_SAY,
-  OK,
-  PARKING_CLOSE,
-}
-
-extension VoteToFirebaseProperty on Vote {
-  String get firebaseProperty {
-    switch(this) {
-      case Vote.CANT_SAY:
-        return 'votesNotSure';
-      case Vote.OK:
-        return 'votesOk';
-      case Vote.PARKING_CLOSE:
-        return 'votesTooClose';
-      default:
-        throw new Exception("Invalid vote to firebase property conversion");
-    }
-  }
-}
 
 class CrossingsSwiper extends StatefulWidget {
   @override
@@ -174,47 +155,7 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Help'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text(
-                        'Look at the map presented to you. The cross indicates '
-                            'the position of the relevant pedestrian crossing, and '
-                            'the blue circle has a radius of 5m.')),
-                Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text(
-                        'First, put the blue circle on one end of the pedestrian '
-                            'crossing by tapping on the relevant place on the map. Then, '
-                            'repeat with the other end of the pedestrian crossing.')),
-                Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text(
-                        'Did you see parking spots in the 5m radius higlighted '
-                            'by the circle on either end of the pedestrian crossing?')),
-                Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text(
-                        'If no, tap the green button to show that all is good! If '
-                            'you did see parking spots that were too close to the pedestrian '
-                            'crossing, tap the red button.')),
-                Text("If it's impossible to tell, press the orange button.")
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Got it!'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
+        return HelpDialog();
       },
     );
   }
@@ -222,9 +163,6 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-/*      appBar: AppBar(
-        title: Text("Safe Crossing"),
-      ),*/
       body: FutureBuilder(
           future: _initializationFuture,
           builder: (context, snapshot) {
