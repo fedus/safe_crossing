@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import 'package:safe_crossing/pages/crossings_swiper.dart';
+import 'package:safe_crossing/pages/swipe_screen.dart';
 import 'package:safe_crossing/widgets/big_loading.dart';
 
 void main() {
@@ -52,7 +52,7 @@ class _SafeCrossingAppState extends State<SafeCrossingApp> {
 
           // Once complete, show your application
           if (snapshot.connectionState == ConnectionState.done) {
-            return CrossingsSwiper();
+            return SwipeScreen();
           }
 
           return Scaffold(

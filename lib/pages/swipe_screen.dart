@@ -1,27 +1,28 @@
-import 'package:flutter/material.dart';
-import 'package:latlong/latlong.dart';
-import 'package:safe_crossing/widgets/crossing_map.dart';
-import 'package:safe_crossing/model/pedestrian_crossing.dart';
-import 'package:safe_crossing/widgets/big_loading.dart';
-import 'package:safe_crossing/widgets/voting_buttons.dart';
-import 'package:safe_crossing/widgets/help_dialog.dart';
-import 'package:safe_crossing/model/vote.dart';
-
-import 'package:swipable_stack/swipable_stack.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:swipable_stack/swipable_stack.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 
-class CrossingsSwiper extends StatefulWidget {
+import 'package:safe_crossing/model/pedestrian_crossing.dart';
+import 'package:safe_crossing/model/vote.dart';
+import 'package:safe_crossing/widgets/big_loading.dart';
+import 'package:safe_crossing/widgets/crossing_map.dart';
+import 'package:safe_crossing/widgets/help_dialog.dart';
+import 'package:safe_crossing/widgets/voting_buttons.dart';
+
+
+class SwipeScreen extends StatefulWidget {
   @override
-  _CrossingsSwiperState createState() => _CrossingsSwiperState();
+  _SwipeScreenState createState() => _SwipeScreenState();
 }
 
-class _CrossingsSwiperState extends State<CrossingsSwiper> {
+class _SwipeScreenState extends State<SwipeScreen> {
   FirebaseFunctions functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
