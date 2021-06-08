@@ -3,6 +3,7 @@ import 'package:latlong/latlong.dart';
 import 'package:safe_crossing/widgets/crossing_map.dart';
 import 'package:safe_crossing/model/pedestrian_crossing.dart';
 import 'package:safe_crossing/widgets/big_loading.dart';
+import 'package:safe_crossing/widgets/voting_buttons.dart';
 
 import 'package:swipable_stack/swipable_stack.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -469,58 +470,11 @@ class _CrossingsSwiperState extends State<CrossingsSwiper> {
     child: AnimatedContainer(
           duration: Duration(seconds: 1),
           height: actionButtonsHeight,
-          child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Container(
-                //height: 100.0,
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width * 0.3,
-                child: FittedBox(
-                    child: FloatingActionButton.extended(
-                        shape: ContinuousRectangleBorder(
-                          borderRadius: BorderRadius.circular(28.0),
-                        ),
-                        label: Icon(Icons.check),
-                        backgroundColor: Colors.green,
-                        onPressed: () =>
-                            swipeController.next(
-                                swipeDirection: SwipeDirection.left)))),
-            Container(
-                //height: 100.0,
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width * 0.3,
-                child: FittedBox(
-                    child: FloatingActionButton.extended(
-                        shape: ContinuousRectangleBorder(
-                          borderRadius: BorderRadius.circular(28.0),
-                        ),
-                        label: Icon(Icons.help),
-                        backgroundColor: Colors.orange,
-                        onPressed: () =>
-                            swipeController.next(
-                                swipeDirection: SwipeDirection.down)))),
-            Container(
-                //height: 100.0,
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width * 0.3,
-                child: FittedBox(
-                    child: FloatingActionButton.extended(
-                        shape: ContinuousRectangleBorder(
-                          borderRadius: BorderRadius.circular(28.0),
-                        ),
-                        label: Icon(Icons.warning),
-                        backgroundColor: Colors.red,
-                        onPressed: () =>
-                            swipeController.next(
-                                swipeDirection: SwipeDirection.right)))),
-          ]))),
+          child: VotingButtons(
+              okCallback: () => swipeController.next(swipeDirection: SwipeDirection.left),
+              notSureCallback: () => swipeController.next(swipeDirection: SwipeDirection.down),
+              tooCloseCallback: () => swipeController.next(swipeDirection: SwipeDirection.right)
+          ))),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
