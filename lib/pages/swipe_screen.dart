@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
+import 'package:safe_crossing/widgets/action_buttons.dart';
 import 'package:safe_crossing/widgets/crossing_infos.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swipable_stack/swipable_stack.dart';
@@ -240,81 +240,17 @@ class _SwipeScreenState extends State<SwipeScreen> {
                     },
                   ),
                 ),
-                SafeArea(child: Stack(children: [Positioned(
-                    top: 20,
-                    right: 20,
-                    child: FloatingActionButton(
-                      child: Icon(Icons.help),
-                      backgroundColor: Colors.blue,
-                      heroTag: 1,
-                      onPressed: _showHelpDialog,
-                    )),
-                  Positioned(
-                      top: 100,
-                      right: 20,
-                      child: FloatingActionButton(
-                        child: Icon(Icons.streetview),
-                        backgroundColor: Colors.green,
-                        heroTag: 2,
-                        onPressed: _openStreetViewUrl,
-                      )),
-                  Positioned(
-                      top: 180,
-                      right: 20,
-                      child: Visibility(
-                          visible: percentPlaceholder < 100,
-                          child: SizedBox(width: 60, height: 60, child: Material(type: MaterialType.circle, color: Colors.blue.withAlpha(1), elevation: 10, child: PieChart(
-                            PieChartData(
-                                borderData: FlBorderData(
-                                  show: false,
-                                ),
-                                sectionsSpace: 0,
-                                centerSpaceRadius: 15,
-                                sections: [
-                                  PieChartSectionData(
-                                    color: Colors.green,
-                                    value: percentOk,
-                                    showTitle: false,
-                                    radius: 10,
-                                  ),
-                                  PieChartSectionData(
-                                    color: Colors.orange,
-                                    value: percentNotSure,
-                                    showTitle: false,
-                                    radius: 10,
-                                  ),
-                                  PieChartSectionData(
-                                    color: Colors.red,
-                                    value: percentTooClose,
-                                    showTitle: false,
-                                    radius: 10,
-                                  ),
-                                  PieChartSectionData(
-                                    color: Colors.white60,
-                                    value: percentTie,
-                                    radius: 10,
-                                    showTitle: false,
-                                  ),
-                                  PieChartSectionData(
-                                    color: const Color(0xff0293ee).withAlpha(1),
-                                    value: percentPlaceholder,
-                                    radius: 10,
-                                    showTitle: false,
-                                  ),
-                                ]),
-                          )),
-                          ))),
-                  Positioned(
-                      top: percentPlaceholder < 100 ? 260 : 180,
-                      right: 20,
-                      child: Visibility(
-                          visible: swipeController.canRewind,
-                          child: FloatingActionButton(
-                            child: Icon(Icons.undo),
-                            backgroundColor: Colors.orange,
-                            heroTag: 3,
-                            onPressed: () => swipeController.rewind(),
-                          )))])),
+                SafeArea(child: ActionButtons(
+                  helpCallback: _showHelpDialog,
+                  streetViewCallback: _openStreetViewUrl,
+                  rewindCallback: swipeController.rewind,
+                  canRewind: swipeController.canRewind,
+                  percentOk: percentOk,
+                  percentNotSure: percentNotSure,
+                  percentTooClose: percentTooClose,
+                  percentTie: percentTie,
+                  percentPlaceholder: percentPlaceholder
+                )),
               ]);
             }
 
