@@ -2,6 +2,10 @@
 # Safe Crossing  
 ***Help make pedestrian crossings safer in Luxembourg-City***
 
+![Safe Crossing Screenshot - 1](https://github.com/fedus/safe_crossing/blob/develop/screens/iphone_1.png)
+![Safe Crossing Screenshot - 2](https://github.com/fedus/safe_crossing/blob/develop/screens/iphone_2.png)
+![Safe Crossing Screenshot - 3](https://github.com/fedus/safe_crossing/blob/develop/screens/iphone_3.png)
+
 Safe Crossing is an app that has been created out of the desire to make cities safer for pedestrians.
 
 Specifically, many pedestrian crossings in Luxembourg-City (but actually, Luxembourg in general) are not compliant with the law. Article 166(h) of the "Code de la Route" ("Highway Code") says that parking spots are forbidden within 5 metres of a pedestrian crossing:
