@@ -2,9 +2,9 @@
 # Safe Crossing  
 ***Help make pedestrian crossings safer in Luxembourg-City***
 
-![Safe Crossing Screenshot - 1](https://github.com/fedus/safe_crossing/blob/develop/screens/iphone_1.png)
-![Safe Crossing Screenshot - 2](https://github.com/fedus/safe_crossing/blob/develop/screens/iphone_2.png)
-![Safe Crossing Screenshot - 3](https://github.com/fedus/safe_crossing/blob/develop/screens/iphone_3.png)
+![Safe Crossing Screenshot - 1](screens/iphone_1.png?raw=true)
+![Safe Crossing Screenshot - 2](screens/iphone_2.png)
+![Safe Crossing Screenshot - 3](screens/iphone_3.png)
 
 Safe Crossing is an app that has been created out of the desire to make cities safer for pedestrians.
 
