@@ -7,6 +7,8 @@ class PedestrianCrossing {
   final int votesTooClose;
   final int votesOk;
   final int votesNotSure;
+  final int votesTotal;
+  final int currentResult;
   final String street;
   final String neighbourhood;
 
@@ -16,6 +18,8 @@ class PedestrianCrossing {
     this.votesTooClose,
     this.votesOk,
     this.votesNotSure,
+    this.votesTotal,
+    this.currentResult,
     this.street,
     this.neighbourhood,
   });
@@ -25,9 +29,11 @@ class PedestrianCrossing {
     return PedestrianCrossing(
       nodeId: json['nodeId'] as String,
       position: LatLng(_position.latitude, _position.longitude),
-      votesTooClose: json['votes_too_close'] != null ? json['votes_too_close'] as int : 0,
-      votesOk: json['votes_ok'] != null ? json['votes_ok'] as int : 0,
-      votesNotSure: json['votes_not_sure'] != null ? json['votes_not_sure'] as int : 0,
+      votesTooClose: json['votesTooClose'] != null ? json['votesTooClose'] as int : 0,
+      votesOk: json['votesOk'] != null ? json['votesOk'] as int : 0,
+      votesNotSure: json['votesNotSure'] != null ? json['votesNotSure'] as int : 0,
+      votesTotal: json['votesTotal'] != null ? json['votesTotal'] as int : 0,
+      currentResult: json['currentResult'] != null ? json['currentResult'] as int : null,
       street: json['street'] != null ? json['street'] as String : '',
       neighbourhood: json['neighbourhood'] != null ? json['neighbourhood'] as String : '',
     );

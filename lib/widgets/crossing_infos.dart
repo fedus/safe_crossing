@@ -6,12 +6,12 @@ import 'package:safe_crossing/model/pedestrian_crossing.dart';
 
 class CrossingInfos extends StatelessWidget {
   final PedestrianCrossing currentCrossing;
-  final QueryDocumentSnapshot<PedestrianCrossing> currentCrossingSnapshot;
+  final Stream<PedestrianCrossing> currentCrossingStream;
   final int percentCompleted;
 
   CrossingInfos({
     @required this.currentCrossing,
-    @required this.currentCrossingSnapshot,
+    @required this.currentCrossingStream,
     @required this.percentCompleted
   });
 
@@ -56,10 +56,10 @@ class CrossingInfos extends StatelessWidget {
                     labelPadding: EdgeInsets.all(5.0),
                     avatar: CircleAvatar(
                       backgroundColor: Colors.white,
-                      child: StreamBuilder<DocumentSnapshot>(
-                        stream: currentCrossingSnapshot.reference.snapshots(),
+                      child: StreamBuilder<PedestrianCrossing>(
+                        stream: currentCrossingStream,
                         builder: (BuildContext context,
-                            AsyncSnapshot<DocumentSnapshot> snapshot) {
+                            AsyncSnapshot<PedestrianCrossing> snapshot) {
                           if (snapshot.hasError) {
                             return Text('?');
                           }
@@ -70,7 +70,7 @@ class CrossingInfos extends StatelessWidget {
                           }
 
                           return Text(
-                              snapshot.data.get('votesTotal').toString(),
+                              snapshot.data.votesTotal.toString(),
                               style: TextStyle(
                                 color: Colors.orange,
                               ));

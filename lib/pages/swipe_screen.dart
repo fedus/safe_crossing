@@ -10,6 +10,7 @@ import 'package:swipable_stack/swipable_stack.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:safe_crossing/repository/crossings_repository.dart';
 import 'package:safe_crossing/model/pedestrian_crossing.dart';
 import 'package:safe_crossing/model/vote.dart';
 import 'package:safe_crossing/widgets/big_loading.dart';
@@ -25,13 +26,15 @@ class SwipeScreen extends StatefulWidget {
 
 class _SwipeScreenState extends State<SwipeScreen> {
   FirebaseFunctions functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+  final CrossingsRepository crossingsRepository = CrossingsRepository(firestore: FirebaseFirestore.instance);
+
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
   
   double actionButtonsHeight = 10;
   double actionButtonsOpacity = 0;
 
-  List<QueryDocumentSnapshot<PedestrianCrossing>> crossingsSnapshots = [];
+  List<PedestrianCrossing> loadedCrossings = [];
   Future _initializationFuture;
 
   int percentCompleted = 0;
@@ -40,13 +43,6 @@ class _SwipeScreenState extends State<SwipeScreen> {
   double percentTooClose = 0;
   double percentTie = 0;
   double percentPlaceholder = 100;
-
-  final crossingsRef = FirebaseFirestore.instance
-      .collection('crossings')
-      .withConverter<PedestrianCrossing>(
-    fromFirestore: (snapshots, _) =>
-        PedestrianCrossing.fromJson(snapshots.data()),
-  );
 
   final metaDoc = FirebaseFirestore.instance
       .collection('meta')
@@ -102,37 +98,22 @@ class _SwipeScreenState extends State<SwipeScreen> {
     HttpsCallableResult<String> userInitializationResult = await functions.httpsCallable('initializeUser')({'userUuid': userUuid});
     print("User eligibility: ${userInitializationResult.data}");
 
-    await _updateCrossingsQuery(0);
+    await _updateCrossingsQuery();
 
     actionButtonsHeight = 100;
     actionButtonsOpacity = 1;
   }
 
-  Future<void> _updateCrossingsQuery(currentIndex) async {
-    Query<PedestrianCrossing> crossingQuery;
-
-    if (currentIndex > 0 ) {
-      crossingQuery = crossingsRef
-          .where('unseenBy', arrayContains: userUuid)
-          .orderBy('votesTotal')
-          .startAfterDocument(crossingsSnapshots.last);
-    } else {
-      crossingQuery = crossingsRef
-          .where('unseenBy', arrayContains: userUuid)
-          .orderBy('votesTotal');
-    }
-
-    QuerySnapshot<PedestrianCrossing> _crossingsSnapshot = await crossingQuery
-        .limit(10)
-        .get();
+  Future<void> _updateCrossingsQuery() async {
+    List<PedestrianCrossing> newCrossings = await crossingsRepository
+        .getNextBatch(userUuid, 10, loadedCrossings.isEmpty ? null : loadedCrossings.last);
 
     setState(() {
-      crossingsSnapshots.addAll(_crossingsSnapshot.docs);
+      loadedCrossings.addAll(newCrossings);
     });
 
-    crossingsSnapshots.asMap().forEach((index, cSnap) {
-      String id = cSnap.get('nodeId');
-      print('Id $id at index $index');
+    loadedCrossings.asMap().forEach((index, crossing) {
+      print('Id ${crossing.nodeId} at index $index');
     });
   }
 
@@ -143,7 +124,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
   }
 
   void _openStreetViewUrl() async {
-    LatLng streetViewPosition = crossingsSnapshots[swipeController.currentIndex].data().position;
+    LatLng streetViewPosition = loadedCrossings[swipeController.currentIndex].position;
     String url = 'http://maps.google.com/maps?q=&layer=c&cbll=${streetViewPosition.latitude},${streetViewPosition.longitude}&cbp=11,direction,0,0,0';
     if (await canLaunch(url)) {
       await launch(url);
@@ -195,22 +176,21 @@ class _SwipeScreenState extends State<SwipeScreen> {
                           vote = Vote.CANT_SAY;
                       }
 
-                      PedestrianCrossing currentCrossing = crossingsSnapshots[index].data();
+                      PedestrianCrossing currentCrossing = loadedCrossings[index];
 
                       _vote(currentCrossing.nodeId, vote);
 
-                      print("Swiped ${currentCrossing.nodeId} at index $index, ${crossingsSnapshots.length} elements in list");
+                      print("Swiped ${currentCrossing.nodeId} at index $index, ${loadedCrossings.length} elements in list");
 
-                      if (crossingsSnapshots.length - index <= 5) {
+                      if (loadedCrossings.length - index <= 5) {
                         print("Loading more ...");
-                        _updateCrossingsQuery(index);
+                        _updateCrossingsQuery();
                       }
                     },
                     builder: (context, index, constraints) {
-                      QueryDocumentSnapshot<PedestrianCrossing> currentCrossingSnapshot = crossingsSnapshots[index];
-                      PedestrianCrossing currentCrossing = currentCrossingSnapshot.data();
+                      PedestrianCrossing currentCrossing = loadedCrossings[index];
 
-                      return index < crossingsSnapshots.length
+                      return index < loadedCrossings.length
                           ? Container(
                           alignment: Alignment.center,
                           child: GestureDetector(
@@ -232,7 +212,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
                                     )),
                                 SafeArea(child: CrossingInfos(
                                   currentCrossing: currentCrossing,
-                                  currentCrossingSnapshot: currentCrossingSnapshot,
+                                  currentCrossingStream: crossingsRepository.getStreamForCrossing(currentCrossing),
                                   percentCompleted: percentCompleted,
                                 )),
                               ])))
