@@ -11,7 +11,7 @@ class CrossingsRepository implements ReactiveCrossingsRepository {
   CollectionReference<PedestrianCrossing> crossingsCollection;
 
   CrossingsRepository({ @required this.firestore }) {
-    crossingsCollection = FirebaseFirestore.instance
+    crossingsCollection = firestore
         .collection('crossings')
         .withConverter<PedestrianCrossing>(
           fromFirestore: (snapshots, _) =>
