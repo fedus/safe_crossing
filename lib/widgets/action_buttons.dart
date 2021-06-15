@@ -6,6 +6,7 @@ class ActionButtons extends StatelessWidget {
   final VoidCallback helpCallback;
   final VoidCallback streetViewCallback;
   final VoidCallback rewindCallback;
+  final VoidCallback toggleCallback;
   final bool canRewind;
 
   final double percentOk;
@@ -19,6 +20,7 @@ class ActionButtons extends StatelessWidget {
     @required this.helpCallback,
     @required this.streetViewCallback,
     @required this.rewindCallback,
+    @required this.toggleCallback,
     @required this.canRewind,
     @required this.percentOk,
     @required this.percentNotSure,
@@ -95,6 +97,15 @@ class ActionButtons extends StatelessWidget {
               ))),
       Positioned(
           top: percentPlaceholder < 100 ? 260 : 180,
+          right: 20,
+          child: FloatingActionButton(
+            child: Icon(Icons.satellite),
+            backgroundColor: Colors.purple,
+            heroTag: 4,
+            onPressed: toggleCallback,
+          )),
+      Positioned(
+          top: percentPlaceholder < 100 ? 340 : 260,
           right: 20,
           child: Visibility(
               visible: canRewind,

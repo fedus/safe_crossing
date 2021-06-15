@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
 
 import 'package:flutter_map/flutter_map.dart';
+import 'package:safe_crossing/model/map_imagery.dart';
 
 class CrossingMap extends StatefulWidget {
   final LatLng crossingPosition;
+  final MapImagery mapImagery;
 
-  CrossingMap({ this.crossingPosition });
+  CrossingMap({ this.crossingPosition, this.mapImagery });
 
   @override
   _CrossingMapState createState() => _CrossingMapState();
@@ -43,8 +45,7 @@ class _CrossingMapState extends State<CrossingMap> {
       layers: [
         TileLayerOptions(
             //urlTemplate: "https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=4tU816YhKHyTCL9UrWcy",
-            urlTemplate: "https://maps.vdl.lu/arcgis/rest/services/BASEMAP/ORTHO_2019/MapServer/tile/{z}/{y}/{x}",
-            //urlTemplate: "http://wmts1.geoportail.lu/opendata/wmts/ortho_2020/GLOBAL_WEBMERCATOR_4_V3/{z}/{x}/{y}.jpeg",
+            urlTemplate: widget.mapImagery.getUrlTemplate,
             maxNativeZoom: 20,
             maxZoom: 22
         ),

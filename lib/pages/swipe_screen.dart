@@ -11,8 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:safe_crossing/repository/crossings_repository.dart';
-import 'package:safe_crossing/model/pedestrian_crossing.dart';
-import 'package:safe_crossing/model/vote.dart';
+import 'package:safe_crossing/model/models.dart';
 import 'package:safe_crossing/widgets/big_loading.dart';
 import 'package:safe_crossing/widgets/crossing_map.dart';
 import 'package:safe_crossing/widgets/help_dialog.dart';
@@ -30,6 +29,8 @@ class _SwipeScreenState extends State<SwipeScreen> {
 
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
+
+  MapImagery mapImagery = MapImagery.GEOPORTAIL_ORTHO_2020;
   
   double actionButtonsHeight = 10;
   double actionButtonsOpacity = 0;
@@ -143,6 +144,16 @@ class _SwipeScreenState extends State<SwipeScreen> {
     );
   }
 
+  void _toggleMapImagery() {
+    setState(() {
+      mapImagery = (
+          mapImagery == MapImagery.CITY_OF_LUXEMBOURG_ORTHO_2019
+              ? MapImagery.GEOPORTAIL_ORTHO_2020
+              : MapImagery.CITY_OF_LUXEMBOURG_ORTHO_2019
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -209,6 +220,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
                                     ),
                                     child: CrossingMap(
                                       crossingPosition: currentCrossing.position,
+                                      mapImagery: mapImagery,
                                     )),
                                 SafeArea(child: CrossingInfos(
                                   currentCrossing: currentCrossing,
@@ -224,6 +236,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
                   helpCallback: _showHelpDialog,
                   streetViewCallback: _openStreetViewUrl,
                   rewindCallback: swipeController.rewind,
+                  toggleCallback: _toggleMapImagery,
                   canRewind: swipeController.canRewind,
                   percentOk: percentOk,
                   percentNotSure: percentNotSure,
