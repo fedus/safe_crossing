@@ -25,7 +25,7 @@ class PedestrianCrossing {
   });
 
   factory PedestrianCrossing.fromJson(Map<String, dynamic> json) {
-    GeoPoint _position = json['position'] as GeoPoint;
+    GeoPoint _position = json['position'] is GeoPoint ? json['position'] : GeoPoint(json['position']['_latitude'], json['position']['_longitude']);
     return PedestrianCrossing(
       nodeId: json['nodeId'] as String,
       position: LatLng(_position.latitude, _position.longitude),

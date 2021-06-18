@@ -25,7 +25,9 @@ class SwipeScreen extends StatefulWidget {
 
 class _SwipeScreenState extends State<SwipeScreen> {
   FirebaseFunctions functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
-  final CrossingsRepository crossingsRepository = CrossingsRepository(firestore: FirebaseFirestore.instance);
+  final CrossingsRepository crossingsRepository = CrossingsRepository(
+      firestore: FirebaseFirestore.instance,
+      functions: FirebaseFunctions.instanceFor(region: 'europe-west1'));
 
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
