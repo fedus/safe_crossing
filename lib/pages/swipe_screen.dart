@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swipable_stack/swipable_stack.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:safe_crossing/repository/crossings_repository.dart';
 import 'package:safe_crossing/model/models.dart';
@@ -28,6 +29,8 @@ class _SwipeScreenState extends State<SwipeScreen> {
   final CrossingsRepository crossingsRepository = CrossingsRepository(
       firestore: FirebaseFirestore.instance,
       functions: FirebaseFunctions.instanceFor(region: 'europe-west1'));
+
+  FToast ftoast;
 
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
@@ -61,6 +64,8 @@ class _SwipeScreenState extends State<SwipeScreen> {
   @override
   void initState() {
     super.initState();
+    ftoast = FToast();
+    ftoast.init(context);
     swipeController.addListener(() => setState(() {}));
     metaDoc.snapshots().listen((snapshot) {
       int totalCrossings = snapshot.get('totalCrossings');
@@ -154,6 +159,40 @@ class _SwipeScreenState extends State<SwipeScreen> {
               : MapImagery.CITY_OF_LUXEMBOURG_ORTHO_2019
       );
     });
+
+    _showMapImagerySwitchToast();
+  }
+
+  void _showMapImagerySwitchToast() {
+    String toastText;
+
+    switch (mapImagery) {
+      case MapImagery.CITY_OF_LUXEMBOURG_ORTHO_2019: {
+        toastText = "VDL 2019 imagery";
+      }
+      break;
+      case MapImagery.GEOPORTAIL_ORTHO_2020: {
+        toastText = "Geoportail 2020 imagery";
+      }
+      break;
+      default: {
+        toastText = "(Unknown imagery)";
+      }
+      break;
+    }
+
+    ftoast.showToast(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25.0),
+          color: Colors.white54,
+        ),
+        child: Text(toastText),
+      ),
+      gravity: ToastGravity.CENTER,
+      toastDuration: Duration(seconds: 2),
+    );
   }
 
   @override
