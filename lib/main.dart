@@ -51,9 +51,9 @@ class _SafeCrossingAppState extends State<SafeCrossingApp> {
           }
 
           // Once complete, show your application
-          //if (snapshot.connectionState == ConnectionState.done) {
-          //  return SwipeScreen();
-          //}
+          if (snapshot.connectionState == ConnectionState.done) {
+            return SwipeScreen();
+          }
 
           return Scaffold(
             body: BigLoading());

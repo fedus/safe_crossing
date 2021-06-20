@@ -38,14 +38,13 @@ class BigLoading extends StatelessWidget {
             ],
           ))),
           Positioned(
-            bottom: 20,
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Image.asset(
+            bottom: 80,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+                alignment: Alignment.center,
+                child: Image.asset(
                     "assets/ZUG_logo_transparent.png",
-                    width: 100)]))
+                    height: 150)))
         ]));
   }
 }
