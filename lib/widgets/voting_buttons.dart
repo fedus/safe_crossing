@@ -25,6 +25,7 @@ class VotingButtons extends StatelessWidget {
               width: buttonWidth,
               child: FittedBox(
                   child: FloatingActionButton.extended(
+                      heroTag: 100,
                       shape: ContinuousRectangleBorder(
                         borderRadius: BorderRadius.circular(28.0),
                       ),
@@ -35,6 +36,7 @@ class VotingButtons extends StatelessWidget {
               width: buttonWidth,
               child: FittedBox(
                   child: FloatingActionButton.extended(
+                      heroTag: 101,
                       shape: ContinuousRectangleBorder(
                         borderRadius: BorderRadius.circular(28.0),
                       ),
@@ -45,6 +47,7 @@ class VotingButtons extends StatelessWidget {
               width: buttonWidth,
               child: FittedBox(
                   child: FloatingActionButton.extended(
+                      heroTag: 102,
                       shape: ContinuousRectangleBorder(
                         borderRadius: BorderRadius.circular(28.0),
                       ),

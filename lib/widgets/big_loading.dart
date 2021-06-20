@@ -36,7 +36,16 @@ class BigLoading extends StatelessWidget {
                 color: Colors.black,
               ),
             ],
-          )))
+          ))),
+          Positioned(
+            bottom: 20,
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    "assets/ZUG_logo_transparent.png",
+                    width: 100)]))
         ]));
   }
 }

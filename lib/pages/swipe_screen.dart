@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
+import 'package:safe_crossing/pages/help_screen.dart';
 import 'package:safe_crossing/widgets/action_buttons.dart';
 import 'package:safe_crossing/widgets/crossing_infos.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -142,13 +143,12 @@ class _SwipeScreenState extends State<SwipeScreen> {
   }
 
   Future<void> _showHelpDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return HelpDialog();
-      },
-    );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) {
+          return HelpScreen();
+        }),
+      );
   }
 
   void _toggleMapImagery() {
