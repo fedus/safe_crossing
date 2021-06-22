@@ -17,14 +17,15 @@ class HelpScreen extends StatelessWidget {
         child: Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-          //title: Text("Safe Crossing Help"),
           backgroundColor: Colors.transparent,
           iconTheme: IconThemeData(color: Colors.white),
           //foregroundColor: Colors.black,
           elevation: 0),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(8),
+        child: ListBody(
+    children: [
+      Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
           child: ListBody(
           children: <Widget>[
             Padding(
@@ -86,31 +87,40 @@ class HelpScreen extends StatelessWidget {
                   'Is the crossing compliant with the law?',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,)),
+          ],
+        )),
+      Container(
+        decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20))
+        ),
+        child: ListBody(
+          children: [
             Padding(
-                padding: EdgeInsets.all(12),
-                child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(padding: EdgeInsets.only(right: 20),
-                          child: FloatingActionButton.extended(
-                              heroTag: 100,
-                              shape: ContinuousRectangleBorder(
-                                borderRadius: BorderRadius.circular(28.0),
-                              ),
-                              label: Icon(Icons.check),
-                              backgroundColor: Colors.green)),
-                      Expanded(child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        Padding(
-                          padding: EdgeInsets.only(bottom: 8),
-                            child: Text('Yes, all clear',  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
-                        Text('Tap the green button to show that all is good'),
-                      ])),
-                    ]),
+              padding: EdgeInsets.all(15),
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(padding: EdgeInsets.only(right: 20),
+                        child: FloatingActionButton.extended(
+                            heroTag: 100,
+                            shape: ContinuousRectangleBorder(
+                              borderRadius: BorderRadius.circular(28.0),
+                            ),
+                            label: Icon(Icons.check),
+                            backgroundColor: Colors.green)),
+                    Expanded(child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                              padding: EdgeInsets.only(bottom: 8),
+                              child: Text('Yes, all clear',  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+                          Text('Tap the green button to show that all is good'),
+                        ])),
+                  ]),
             ),
             Padding(
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(15),
               child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -133,18 +143,18 @@ class HelpScreen extends StatelessWidget {
                   ]),
             ),
             Padding(
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(15),
               child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(padding: EdgeInsets.only(right: 20),
                         child: FloatingActionButton.extended(
-                            heroTag: 102,
-                            shape: ContinuousRectangleBorder(
-                              borderRadius: BorderRadius.circular(28.0),
-                            ),
-                            label: Icon(Icons.warning),
-                            backgroundColor: Colors.red,)),
+                          heroTag: 102,
+                          shape: ContinuousRectangleBorder(
+                            borderRadius: BorderRadius.circular(28.0),
+                          ),
+                          label: Icon(Icons.warning),
+                          backgroundColor: Colors.red,)),
                     Expanded(child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -157,7 +167,8 @@ class HelpScreen extends StatelessWidget {
             ),
           ],
         ),
-      )),
+      ),
+      ])),
     ));
   }
 
