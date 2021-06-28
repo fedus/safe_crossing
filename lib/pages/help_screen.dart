@@ -8,10 +8,13 @@ class HelpScreen extends StatelessWidget {
       controller: scrollController,
       child: ListBody(
           children: [
-            Padding(
-                padding: EdgeInsets.all(16),
-                child: ListBody(
-                  children: <Widget>[
+            Container(
+                decoration: BoxDecoration(
+                    color: Colors.deepOrangeAccent,
+                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30))
+                ),
+                child: SafeArea(child: Padding(padding: EdgeInsets.all(16), child: ListBody(
+                  children: [
                     Padding(
                         padding: EdgeInsets.only(bottom: 16),
                         child: Text(
@@ -31,10 +34,10 @@ class HelpScreen extends StatelessWidget {
                             child: Padding(
                                 padding: EdgeInsets.all(12),
                                 child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
                                       Padding(padding: EdgeInsets.only(right: 20),
-                                          child: Text('1', style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold))),
+                                          child: Text('1', textAlign: TextAlign.center, style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold))),
                                       Expanded(child: Text(
                                           'Look at the map presented to you. The cross indicates '
                                               'the position of the relevant pedestrian crossing, and '
@@ -51,33 +54,42 @@ class HelpScreen extends StatelessWidget {
                             child: Padding(
                                 padding: EdgeInsets.all(12),
                                 child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
                                       Padding(padding: EdgeInsets.only(right: 20),
-                                          child: Text('2', style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold))),
+                                          child: Text('2', textAlign: TextAlign.center, style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold))),
                                       Expanded(child: Text(
                                           'Put the blue circle on one end of the pedestrian '
                                               'crossing by tapping on the relevant place on the map. Then, '
                                               'repeat with the other end of the pedestrian crossing.')),
                                     ])))),
+                  ],
+                )))),
+            Padding(
+                padding: EdgeInsets.all(16),
+                child: ListBody(
+                  children: <Widget>[
                     Center(child: Icon(
                       Icons.keyboard_arrow_down,
                       color: Colors.white,
                       size: 80.0,
                     )),
                     Padding(
-                        padding: EdgeInsets.only(top: 16, bottom: 24),
+                        padding: EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
                         child: Text(
                           'Is the crossing compliant with the law?',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,)),
                   ],
                 )),
-            Container(
-              decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20))
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 32),
+                child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
+              color: Colors.orange.shade50,
+              elevation: 10,
               child: ListBody(
                 children: [
                   Padding(
@@ -151,7 +163,7 @@ class HelpScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
+            )),
           ]));
 
   @override
@@ -162,24 +174,23 @@ class HelpScreen extends StatelessWidget {
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
           colors: [
-            Colors.deepOrange.shade200,
+            Colors.deepOrange.shade50,
             Colors.orangeAccent.shade200,
           ],
         )),
         child: Scaffold(
             backgroundColor: Colors.transparent,
-            body: SafeArea(
-                child: Stack(children: [
+            body: Stack(children: [
               mainContent,
               Positioned(
                   top: 10,
                   left: 20,
-                  child: FadeOnScroll(
+                  child: SafeArea(child: FadeOnScroll(
                     scrollController: scrollController,
                     fullOpacityOffset: 0,
                     zeroOpacityOffset: 10,
                     child: BackButton(),
-                  )),
-            ]))));
+                  ))),
+            ])));
   }
 }
