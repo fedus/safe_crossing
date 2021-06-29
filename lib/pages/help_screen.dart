@@ -85,7 +85,7 @@ class HelpScreen extends StatelessWidget {
                   ],
                 )),
             Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 32),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 40),
                 child: Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
@@ -166,6 +166,10 @@ class HelpScreen extends StatelessWidget {
                 ],
               ),
             )),
+            Text("Crossing data: (c) OpenStreetMaps", textAlign: TextAlign.center),
+            Text("Aerial imagery: (c) Geoportail", textAlign: TextAlign.center),
+            Padding(padding: EdgeInsets.only(bottom: 24), child: Text("Aerial imagery: (c) Ville de Luxembourg", textAlign: TextAlign.center)),
+            Padding(padding: EdgeInsets.only(bottom: 24), child: Text("A project by the Center for Urban Justice", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold))),
           ]));
 
   @override
