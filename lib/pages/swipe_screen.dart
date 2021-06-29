@@ -32,6 +32,8 @@ class _SwipeScreenState extends State<SwipeScreen> {
 
   FToast ftoast;
 
+  bool isLoadingNewCrossings = false;
+
   MapController mapController;
   LatLng circlePosition = LatLng(49.5726531, 6.0971228);
 
@@ -113,12 +115,19 @@ class _SwipeScreenState extends State<SwipeScreen> {
   }
 
   Future<void> _updateCrossingsQuery() async {
+
+    if (isLoadingNewCrossings) return;
+
+    isLoadingNewCrossings = true;
+
     List<PedestrianCrossing> newCrossings = await crossingsRepository
         .getNextBatch(userUuid, 10, loadedCrossings.isEmpty ? null : loadedCrossings.last);
 
     setState(() {
       loadedCrossings.addAll(newCrossings);
     });
+
+    isLoadingNewCrossings = false;
 
     loadedCrossings.asMap().forEach((index, crossing) {
       print('Id ${crossing.nodeId} at index $index');
