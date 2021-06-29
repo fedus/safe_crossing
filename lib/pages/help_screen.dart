@@ -8,10 +8,12 @@ class HelpScreen extends StatelessWidget {
       controller: scrollController,
       child: ListBody(
           children: [
-            Container(
-                decoration: BoxDecoration(
-                    color: Colors.deepOrangeAccent,
-                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30))
+            Card(
+              margin: EdgeInsets.zero,
+              elevation: 20,
+                color: Colors.orange.shade200,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
                 ),
                 child: SafeArea(child: Padding(padding: EdgeInsets.all(16), child: ListBody(
                   children: [
@@ -30,7 +32,7 @@ class HelpScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             color: Colors.orange.shade50,
-                            elevation: 10,
+                            elevation: 0,
                             child: Padding(
                                 padding: EdgeInsets.all(12),
                                 child: Row(
@@ -50,7 +52,7 @@ class HelpScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             color: Colors.orange.shade50,
-                            elevation: 10,
+                            elevation: 0,
                             child: Padding(
                                 padding: EdgeInsets.all(12),
                                 child: Row(
@@ -171,11 +173,13 @@ class HelpScreen extends StatelessWidget {
     return Container(
         decoration: BoxDecoration(
             gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: [
-            Colors.deepOrange.shade50,
-            Colors.orangeAccent.shade200,
+            //Colors.black,
+            Colors.orangeAccent,
+            Colors.orangeAccent,
+            Colors.deepOrange.shade100
           ],
         )),
         child: Scaffold(

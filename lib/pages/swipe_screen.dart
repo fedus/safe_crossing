@@ -16,7 +16,6 @@ import 'package:safe_crossing/repository/crossings_repository.dart';
 import 'package:safe_crossing/model/models.dart';
 import 'package:safe_crossing/widgets/big_loading.dart';
 import 'package:safe_crossing/widgets/crossing_map.dart';
-import 'package:safe_crossing/widgets/help_dialog.dart';
 import 'package:safe_crossing/widgets/voting_buttons.dart';
 
 
