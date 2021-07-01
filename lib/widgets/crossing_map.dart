@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:latlong/latlong.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'package:flutter_map/flutter_map.dart';
 import 'package:safe_crossing/model/map_imagery.dart';
@@ -17,18 +17,24 @@ class CrossingMap extends StatefulWidget {
 class _CrossingMapState extends State<CrossingMap> {
 
   MapController mapController;
-  LatLng circlePosition;
-
-  void _handleTap(LatLng newPosition) {
-    setState(() {
-      circlePosition = newPosition;
-    });
-  }
+  bool controllerReady = false;
+  bool buildFinished = false;
 
   @override
   void initState() {
     super.initState();
-    circlePosition = widget.crossingPosition;
+    mapController = MapController();
+    mapController.onReady.then((value) {
+      setState(() {
+        controllerReady = true;
+      });
+    });
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => buildFinished = true);
+  }
+
+  void _handleMove(position, hasGesture) {
+    if (buildFinished) setState(() {});
   }
 
 
@@ -40,7 +46,7 @@ class _CrossingMapState extends State<CrossingMap> {
         //interactiveFlags: InteractiveFlag.none,
         center: widget.crossingPosition,
         zoom: 20.0,
-        onTap: _handleTap,
+        onPositionChanged: _handleMove
       ),
       layers: [
         TileLayerOptions(
@@ -63,7 +69,7 @@ class _CrossingMapState extends State<CrossingMap> {
             Marker(
               width: 10.0,
               height: 10.0,
-              point: circlePosition,
+              point: controllerReady ? mapController.center : widget.crossingPosition,
               anchorPos: AnchorPos.align(AnchorAlign.center),
               builder: (ctx) => Container(
                 child: Icon(Icons.circle, size: 10, color: Colors.blueAccent,),
@@ -73,7 +79,7 @@ class _CrossingMapState extends State<CrossingMap> {
         ),
         CircleLayerOptions(circles: [
           CircleMarker(
-              point: circlePosition,
+              point: controllerReady ? mapController.center : widget.crossingPosition,
               color: Colors.blue.withOpacity(0.25),
               borderColor: Colors.blue,
               borderStrokeWidth: 2,

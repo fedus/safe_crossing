@@ -62,7 +62,7 @@ class HelpScreen extends StatelessWidget {
                                           child: Text('2', textAlign: TextAlign.center, style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold))),
                                       Expanded(child: Text(
                                           'Put the blue circle on one end of the pedestrian '
-                                              'crossing by tapping on the relevant place on the map. Then, '
+                                              'crossing by dragging the map underneath it to the desired position. Then, '
                                               'repeat with the other end of the pedestrian crossing.')),
                                     ])))),
                   ],

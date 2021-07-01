@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong/latlong.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:safe_crossing/pages/help_screen.dart';
 import 'package:safe_crossing/widgets/action_buttons.dart';
 import 'package:safe_crossing/widgets/crossing_infos.dart';
