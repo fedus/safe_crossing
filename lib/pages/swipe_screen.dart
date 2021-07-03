@@ -251,36 +251,38 @@ class _SwipeScreenState extends State<SwipeScreen> {
                       }
                     },
                     builder: (context, index, constraints) {
-                      PedestrianCrossing currentCrossing = loadedCrossings[index];
+                      if (index < loadedCrossings.length) {
+                        PedestrianCrossing currentCrossing = loadedCrossings[index];
 
-                      return index < loadedCrossings.length
-                          ? Container(
-                          alignment: Alignment.center,
-                          child: GestureDetector(
-                            // Absorb card swiping in favour of map gestures
-                              onPanStart: (_) => {},
-                              onPanUpdate: (_) => {},
-                              onPanEnd: (_) => {},
-                              child: Stack(children: [
-                                Container(
-                                    foregroundDecoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment(-1, -1),
-                                        end: Alignment(-1, -0.75),
-                                        colors: [Colors.black54, Colors.transparent],
+                        return Container(
+                            alignment: Alignment.center,
+                            child: GestureDetector(
+                              // Absorb card swiping in favour of map gestures
+                                onPanStart: (_) => {},
+                                onPanUpdate: (_) => {},
+                                onPanEnd: (_) => {},
+                                child: Stack(children: [
+                                  Container(
+                                      foregroundDecoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment(-1, -1),
+                                          end: Alignment(-1, -0.75),
+                                          colors: [Colors.black54, Colors.transparent],
+                                        ),
                                       ),
-                                    ),
-                                    child: CrossingMap(
-                                      crossingPosition: currentCrossing.position,
-                                      mapImagery: mapImagery,
-                                    )),
-                                SafeArea(child: CrossingInfos(
-                                  currentCrossing: currentCrossing,
-                                  currentCrossingStream: crossingsRepository.getStreamForCrossing(currentCrossing),
-                                  percentCompleted: percentCompleted,
-                                )),
-                              ])))
-                          : Center(child: Text("Hooray! You're at the end."));
+                                      child: CrossingMap(
+                                        crossingPosition: currentCrossing.position,
+                                        mapImagery: mapImagery,
+                                      )),
+                                  SafeArea(child: CrossingInfos(
+                                    currentCrossing: currentCrossing,
+                                    currentCrossingStream: crossingsRepository.getStreamForCrossing(currentCrossing),
+                                    percentCompleted: percentCompleted,
+                                  )),
+                                ])));
+                      }
+
+                      return Center(child: Text("Hooray! You're at the end."));
                     },
                   ),
                 ),
