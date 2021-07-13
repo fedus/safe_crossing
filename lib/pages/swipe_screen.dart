@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:safe_crossing/pages/help_screen.dart';
 import 'package:safe_crossing/widgets/action_buttons.dart';
+import 'package:safe_crossing/widgets/cat_tax.dart';
 import 'package:safe_crossing/widgets/crossing_infos.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swipable_stack/swipable_stack.dart';
@@ -110,8 +111,10 @@ class _SwipeScreenState extends State<SwipeScreen> {
 
     await _updateCrossingsQuery();
 
-    actionButtonsHeight = 100;
-    actionButtonsOpacity = 1;
+    if (loadedCrossings.length > 0) {
+      actionButtonsHeight = 100;
+      actionButtonsOpacity = 1;
+    }
   }
 
   Future<void> _updateCrossingsQuery() async {
@@ -189,6 +192,8 @@ class _SwipeScreenState extends State<SwipeScreen> {
       break;
     }
 
+    ftoast.removeQueuedCustomToasts();
+    ftoast.removeCustomToast();
     ftoast.showToast(
       child: Padding(
           padding: EdgeInsets.only(top: 400),
@@ -224,6 +229,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
               dynamicWidget = Stack(children: [
                 Container(
                   child: SwipableStack(
+                    itemCount: loadedCrossings.length+1,
                     controller: swipeController,
                     onSwipeCompleted: (index, direction) {
                       Vote vote;
@@ -248,6 +254,12 @@ class _SwipeScreenState extends State<SwipeScreen> {
                       if (loadedCrossings.length - index <= 5) {
                         print("Loading more ...");
                         _updateCrossingsQuery();
+                      }
+                      if ((index + 1) == loadedCrossings.length) {
+                        setState(() {
+                          actionButtonsOpacity = 0;
+                          actionButtonsHeight = 0;
+                        });
                       }
                     },
                     builder: (context, index, constraints) {
@@ -282,7 +294,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
                                 ])));
                       }
 
-                      return Center(child: Text("Hooray! You're at the end."));
+                      return CatTax();
                     },
                   ),
                 ),

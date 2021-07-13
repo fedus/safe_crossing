@@ -40,6 +40,7 @@ dependencies:
   url_launcher: ^6.0.4
   fl_chart: ^0.36.1
   fluttertoast: ^8.0.7
+  confetti: ^0.5.5
 
 dev_dependencies:
   flutter_test:
